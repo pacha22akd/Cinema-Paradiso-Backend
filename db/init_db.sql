@@ -27,11 +27,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     password_hash  VARCHAR(255) NOT NULL,
     telefono       VARCHAR(30),
     rol_id         INT NOT NULL,
-    activo         BOOLEAN DEFAULT TRUE,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
-
 -- ---------------------------------------------
 -- 2. LOCALES, SALAS Y BUTACAS
 -- ---------------------------------------------
@@ -109,7 +107,6 @@ CREATE TABLE IF NOT EXISTS compras (
     email_enviado       BOOLEAN DEFAULT FALSE,
     fecha_cancelacion   DATETIME,
     motivo_cancelacion  VARCHAR(255),
-    monto_reembolso     DECIMAL(10,2) DEFAULT 0,
     numero_factura      VARCHAR(50) UNIQUE,
     url_factura_pdf     VARCHAR(500),
     factura_enviada     BOOLEAN DEFAULT FALSE,
@@ -146,7 +143,6 @@ CREATE TABLE IF NOT EXISTS servicios (
     categoria   VARCHAR(50),
     precio      DECIMAL(10,2) NOT NULL,
     stock       INT,
-    activo      BOOLEAN DEFAULT TRUE,
     imagen_url  VARCHAR(500)
 );
 
