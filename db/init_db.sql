@@ -1,12 +1,10 @@
--- Se eliminan primero las tablas hijas para respetar las FOREIGN KEY.
--- ATENCION: ejecutar este archivo elimina los datos existentes.
 DROP TABLE IF EXISTS compra_servicios;
 DROP TABLE IF EXISTS entradas;
 DROP TABLE IF EXISTS compras;
-DROP TABLE IF EXISTS funciones;
-DROP TABLE IF EXISTS butacas;
 DROP TABLE IF EXISTS servicios;
+DROP TABLE IF EXISTS funciones;
 DROP TABLE IF EXISTS peliculas;
+DROP TABLE IF EXISTS butacas;
 DROP TABLE IF EXISTS salas;
 DROP TABLE IF EXISTS locales;
 DROP TABLE IF EXISTS usuarios;
@@ -16,9 +14,8 @@ DROP TABLE IF EXISTS roles;
 -- 1. SEGURIDAD Y USUARIOS
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS roles (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    nombre      VARCHAR(50) NOT NULL UNIQUE,
-    descripcion VARCHAR(255)
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -29,6 +26,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     password_hash  VARCHAR(255) NOT NULL,
     telefono       VARCHAR(30),
     rol_id         INT NOT NULL,
+    activo         BOOLEAN NOT NULL DEFAULT TRUE,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
@@ -84,15 +82,15 @@ CREATE TABLE IF NOT EXISTS funciones (
     id             INT AUTO_INCREMENT PRIMARY KEY,
     pelicula_id    INT NOT NULL,
     sala_id        INT NOT NULL,
-    fecha          DATE NOT NULL,
-    hora_inicio    TIME NOT NULL,
-    hora_fin       TIME,
+    fecha_hora_inicio DATETIME NOT NULL,
+    fecha_hora_fin    DATETIME NOT NULL,
     precio_base    FLOAT NOT NULL,
     estado         ENUM('programada','en_curso','finalizada','cancelada') DEFAULT 'programada',
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pelicula_id) REFERENCES peliculas(id),
     FOREIGN KEY (sala_id)     REFERENCES salas(id),
-    UNIQUE (sala_id, fecha, hora_inicio)
+    UNIQUE (sala_id, fecha_hora_inicio),
+    CONSTRAINT chk_funcion_horario CHECK (fecha_hora_fin > fecha_hora_inicio)
 );
 
 -- ---------------------------------------------
@@ -113,7 +111,8 @@ CREATE TABLE IF NOT EXISTS compras (
     url_factura_pdf     VARCHAR(500),
     factura_enviada     BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    FOREIGN KEY (funcion_id) REFERENCES funciones(id)
+    FOREIGN KEY (funcion_id) REFERENCES funciones(id),
+    UNIQUE (id, funcion_id)
 );
 
 -- ---------------------------------------------
@@ -126,17 +125,23 @@ CREATE TABLE IF NOT EXISTS entradas (
     butaca_id         INT NOT NULL,
     precio            FLOAT NOT NULL,
     qr_codigo         VARCHAR(100) NOT NULL UNIQUE,
-    estado            ENUM('valida','usada','cancelada') DEFAULT 'valida',
+    estado            ENUM('pendiente','valida','usada','cancelada') NOT NULL DEFAULT 'pendiente',
+    -- MySQL permite multiples NULL en UNIQUE. Una entrada cancelada deja de bloquear su butaca.
+    butaca_ocupada_id INT GENERATED ALWAYS AS (
+        CASE WHEN estado = 'cancelada' THEN NULL ELSE butaca_id END
+    ) STORED,
     fecha_uso         DATETIME,
     fecha_cancelacion DATETIME,
-    FOREIGN KEY (compra_id)  REFERENCES compras(id),
+    -- Esta FK compuesta exige que la funcion de la entrada sea la misma que la compra.
+    FOREIGN KEY (compra_id, funcion_id) REFERENCES compras(id, funcion_id),
     FOREIGN KEY (funcion_id) REFERENCES funciones(id),
     FOREIGN KEY (butaca_id)  REFERENCES butacas(id),
-    UNIQUE (funcion_id, butaca_id)
+    UNIQUE (funcion_id, butaca_ocupada_id)
 );
 
 -- ---------------------------------------------
 -- 7. SERVICIOS
+-- Se mantiene el borrado fisico; si hay compra_servicios asociados, la FK impide eliminar.
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS servicios (
     id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -159,454 +164,194 @@ CREATE TABLE IF NOT EXISTS compra_servicios (
     FOREIGN KEY (servicio_id) REFERENCES servicios(id)
 );
 
--- ============================================================
--- DATOS DE PRUEBA: basados en datos_demo.sql
--- ============================================================
--- Se fijan algunos ID porque datos_demo.sql los referencia directamente.
--- Se conserva la estructura de todas las tablas sin columnas adicionales.
--- Los valores 'hash_demo_*' son marcadores y NO son hashes válidos para login.
 
--- 1. ROLES (archivo datos_demo.sql)
-INSERT INTO roles (id, nombre) VALUES
-    (1, 'Administrador'),
-    (2, 'Cliente');
+-- ---------------------------------------------
+-- 8. DATOS DE PRUEBA (INSERT INTO)
+-- ---------------------------------------------
+-- Para pruebas locales exclusivamente; NO son cuentas reales ni datos de producción.
+-- Contraseña de los cuatro usuarios de prueba: Demo1234!
+-- Los hashes son PBKDF2 SHA-256 compatibles con werkzeug.security.check_password_hash().
+-- Si el Backend usa otro mecanismo de contraseñas, adaptar estos hashes.
+-- Los importes usan FLOAT, de acuerdo con la modificación solicitada.
 
--- 2. LOCALES (3 únicos; se excluye el segundo INSERT duplicado)
--- Nota: datos_demo.sql repite Palermo con teléfono diferente.
--- Se conserva la primera versión: 011-4822-9980.
-INSERT INTO locales (id, nombre, direccion, ciudad, telefono) VALUES
-    (1, 'Cine Paradiso Centro', 'Av. Corrientes 1234', 'CABA', '011-4000-0000'),
-    (2, 'Cine Paradiso Belgrano', 'Av. Cabildo 2450', 'CABA', '011-4789-1234'),
-    (3, 'Cine Paradiso Palermo', 'Av. Santa Fe 3200', 'CABA', '011-4822-9980');
+-- ROLES: 2 registros
+INSERT INTO roles (nombre) VALUES
+    ('administrador'),
+    ('cliente');
 
--- 3. USUARIOS
--- Los primeros tres usuarios son los de datos_demo.sql.
--- Se añade un usuario de prueba id=4 porque COMPRA-004 refiere a usuario_id=4.
-INSERT INTO usuarios (id, nombre, apellido, email, password_hash, telefono, rol_id) VALUES
-    (1, 'María', 'Gómez', 'maria.gomez@email.com', 'hash_demo_456', '1122334455', 2),
-    (2, 'Carlos', 'López', 'carlos.lopez@email.com', 'hash_demo_789', '1166778899', 2),
-    (3, 'Ana', 'Martínez', 'ana.martinez@email.com', 'hash_demo_101', '1144556677', 1),
-    (4, 'Usuario', 'DePrueba', 'usuario4.demo@example.com', 'hash_demo_usuario4', NULL, 2);
+-- USUARIOS: 4 registros
+INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol_id, fecha_registro) VALUES
+    ('Admin', 'Demo', 'admin.demo@example.com', 'pbkdf2:sha256:600000$b2d73c3902681173$f7b8d8b40213bd93b9b18c68e6776b348f0ce5641accd5c9873c572e351dd9f8', '1111-1000', 1, '2026-10-20 10:00:00'),
+    ('Ana', 'Prueba', 'ana.prueba@example.com', 'pbkdf2:sha256:600000$42c968950e71908e$c980f9d267e4623bfccd0a021ed713c6c0f8f563632d492c35e9d7a6ebd5e161', '1111-2000', 2, '2026-10-20 10:00:00'),
+    ('Bruno', 'Prueba', 'bruno.prueba@example.com', 'pbkdf2:sha256:600000$9d159d1bead84571$3be8af095b8250ae5b1cd49a87d4b457f0c35854c993dbf178a49416dce619b3', '1111-3000', 2, '2026-10-20 10:00:00'),
+    ('Carla', 'Prueba', 'carla.prueba@example.com', 'pbkdf2:sha256:600000$2e6cccb8fc6df658$167a1108a0b670795bc873cd543820a4a46040f91d7883901da82cca18a22f43', '1111-4000', 2, '2026-10-20 10:00:00');
 
--- 4. SALAS (datos_demo.sql)
-INSERT INTO salas (id, local_id, nombre, capacidad, tipo) VALUES
-    (1, 1, 'Sala IMAX', 150, 'IMAX 3D'),
-    (2, 2, 'Sala VIP 1', 50, 'Premium'),
-    (3, 2, 'Sala VIP 2', 50, 'Premium'),
-    (4, 3, 'Sala 1', 120, '2D');
+-- LOCALES: 3 registros, como indica el contexto del enunciado
+INSERT INTO locales (nombre, direccion, ciudad, telefono) VALUES
+    ('Cine Paradiso Centro', 'Av. Corrientes 1200', 'CABA', '011-4000-1000'),
+    ('Cine Paradiso Norte', 'Av. Cabildo 2200', 'CABA', '011-4000-2000'),
+    ('Cine Paradiso Oeste', 'Av. Rivadavia 6400', 'CABA', '011-4000-3000');
 
--- 5. PELÍCULAS (ids 3..6 para respetar las referencias de datos_demo.sql)
-INSERT INTO peliculas (id, titulo, sinopsis, duracion_min, clasificacion, genero, anio_estreno) VALUES
-    (3, 'Nueve Reinas', 'Dos estafadores de poca monta se unen para un gran negocio.', 114, '+13', 'Policial/Comedia', 2000),
-    (4, 'El Robo del Siglo', 'Un grupo de ladrones planea el asalto al Banco Río de Acassuso.', 114, '+13', 'Suspenso/Comedia', 2020),
-    (5, 'Argentina, 1985', 'Un equipo jurídico se atreve a enjuiciar a la dictadura militar.', 140, '+13', 'Drama/Historia', 2022),
-    (6, 'Esperando la Carroza', 'Una comedia clásica sobre los conflictos de una familia argentina.', 94, 'ATP', 'Comedia', 1985);
+-- SALAS: 4 registros (12 butacas cada una); una sala para el tercer local
+INSERT INTO salas (local_id, nombre, capacidad, tipo) VALUES
+    (1, 'Sala 1', 12, '2D'),
+    (1, 'Sala 2', 12, '3D'),
+    (2, 'Sala 1', 12, '2D'),
+    (3, 'Sala 1', 12, '2D');
 
--- 6. FUNCIONES (datos_demo.sql: ids 3..6 para que las compras referencien las correctas)
-INSERT INTO funciones (id, pelicula_id, sala_id, fecha, hora_inicio, hora_fin, precio_base, estado) VALUES
-    (3, 3, 3, '2026-11-01', '15:00:00', '17:20:00', 6000.00, 'programada'),
-    (4, 4, 4, '2026-11-01', '19:00:00', '20:34:00', 7500.00, 'programada'),
-    (5, 5, 1, '2026-11-02', '21:30:00', '23:50:00', 5000.00, 'programada'),
-    (6, 6, 2, '2026-11-02', '18:00:00', '19:34:00', 4000.00, 'programada');
+-- BUTACAS: 48 registros, 12 en cada sala
+INSERT INTO butacas (sala_id, fila, numero, tipo) VALUES
+    (1, 'A', 1, 'estandar'),
+    (1, 'A', 2, 'estandar'),
+    (1, 'A', 3, 'estandar'),
+    (1, 'A', 4, 'estandar'),
+    (1, 'B', 1, 'estandar'),
+    (1, 'B', 2, 'estandar'),
+    (1, 'B', 3, 'estandar'),
+    (1, 'B', 4, 'estandar'),
+    (1, 'C', 1, 'estandar'),
+    (1, 'C', 2, 'estandar'),
+    (1, 'C', 3, 'estandar'),
+    (1, 'C', 4, 'estandar'),
+    (2, 'A', 1, 'estandar'),
+    (2, 'A', 2, 'estandar'),
+    (2, 'A', 3, 'estandar'),
+    (2, 'A', 4, 'estandar'),
+    (2, 'B', 1, 'estandar'),
+    (2, 'B', 2, 'estandar'),
+    (2, 'B', 3, 'estandar'),
+    (2, 'B', 4, 'estandar'),
+    (2, 'C', 1, 'estandar'),
+    (2, 'C', 2, 'estandar'),
+    (2, 'C', 3, 'estandar'),
+    (2, 'C', 4, 'estandar'),
+    (3, 'A', 1, 'estandar'),
+    (3, 'A', 2, 'estandar'),
+    (3, 'A', 3, 'estandar'),
+    (3, 'A', 4, 'estandar'),
+    (3, 'B', 1, 'estandar'),
+    (3, 'B', 2, 'estandar'),
+    (3, 'B', 3, 'estandar'),
+    (3, 'B', 4, 'estandar'),
+    (3, 'C', 1, 'estandar'),
+    (3, 'C', 2, 'estandar'),
+    (3, 'C', 3, 'estandar'),
+    (3, 'C', 4, 'estandar'),
+    (4, 'A', 1, 'estandar'),
+    (4, 'A', 2, 'estandar'),
+    (4, 'A', 3, 'estandar'),
+    (4, 'A', 4, 'estandar'),
+    (4, 'B', 1, 'estandar'),
+    (4, 'B', 2, 'estandar'),
+    (4, 'B', 3, 'estandar'),
+    (4, 'B', 4, 'estandar'),
+    (4, 'C', 1, 'estandar'),
+    (4, 'C', 2, 'estandar'),
+    (4, 'C', 3, 'estandar'),
+    (4, 'C', 4, 'estandar');
 
--- 7. BUTACAS
--- Se conservan exactamente las tres posiciones indicadas en datos_demo.sql:
--- id=4 sala=3 B1, id=5 sala=3 B2, id=6 sala=4 A1 (vip).
--- El resto se generan como datos de prueba para igualar las capacidades de las salas.
-INSERT INTO butacas (id, sala_id, fila, numero, tipo) VALUES
-    (1, 1, 'A', 1, 'estandar'),
-    (2, 1, 'A', 2, 'estandar'),
-    (3, 2, 'A', 1, 'vip'),
-    (4, 3, 'B', 1, 'estandar'),
-    (5, 3, 'B', 2, 'estandar'),
-    (6, 4, 'A', 1, 'vip'),
-    (7, 1, 'A', 3, 'estandar'),
-    (8, 1, 'A', 4, 'estandar'),
-    (9, 1, 'A', 5, 'estandar'),
-    (10, 1, 'A', 6, 'estandar'),
-    (11, 1, 'A', 7, 'estandar'),
-    (12, 1, 'A', 8, 'estandar'),
-    (13, 1, 'A', 9, 'estandar'),
-    (14, 1, 'A', 10, 'estandar'),
-    (15, 1, 'B', 1, 'estandar'),
-    (16, 1, 'B', 2, 'estandar'),
-    (17, 1, 'B', 3, 'estandar'),
-    (18, 1, 'B', 4, 'estandar'),
-    (19, 1, 'B', 5, 'estandar'),
-    (20, 1, 'B', 6, 'estandar'),
-    (21, 1, 'B', 7, 'estandar'),
-    (22, 1, 'B', 8, 'estandar'),
-    (23, 1, 'B', 9, 'estandar'),
-    (24, 1, 'B', 10, 'estandar'),
-    (25, 1, 'C', 1, 'estandar'),
-    (26, 1, 'C', 2, 'estandar'),
-    (27, 1, 'C', 3, 'estandar'),
-    (28, 1, 'C', 4, 'estandar'),
-    (29, 1, 'C', 5, 'estandar'),
-    (30, 1, 'C', 6, 'estandar'),
-    (31, 1, 'C', 7, 'estandar'),
-    (32, 1, 'C', 8, 'estandar'),
-    (33, 1, 'C', 9, 'estandar'),
-    (34, 1, 'C', 10, 'estandar'),
-    (35, 1, 'D', 1, 'estandar'),
-    (36, 1, 'D', 2, 'estandar'),
-    (37, 1, 'D', 3, 'estandar'),
-    (38, 1, 'D', 4, 'estandar'),
-    (39, 1, 'D', 5, 'estandar'),
-    (40, 1, 'D', 6, 'estandar'),
-    (41, 1, 'D', 7, 'estandar'),
-    (42, 1, 'D', 8, 'estandar'),
-    (43, 1, 'D', 9, 'estandar'),
-    (44, 1, 'D', 10, 'estandar'),
-    (45, 1, 'E', 1, 'estandar'),
-    (46, 1, 'E', 2, 'estandar'),
-    (47, 1, 'E', 3, 'estandar'),
-    (48, 1, 'E', 4, 'estandar'),
-    (49, 1, 'E', 5, 'estandar'),
-    (50, 1, 'E', 6, 'estandar'),
-    (51, 1, 'E', 7, 'estandar'),
-    (52, 1, 'E', 8, 'estandar'),
-    (53, 1, 'E', 9, 'estandar'),
-    (54, 1, 'E', 10, 'estandar'),
-    (55, 1, 'F', 1, 'estandar'),
-    (56, 1, 'F', 2, 'estandar'),
-    (57, 1, 'F', 3, 'estandar'),
-    (58, 1, 'F', 4, 'estandar'),
-    (59, 1, 'F', 5, 'estandar'),
-    (60, 1, 'F', 6, 'estandar'),
-    (61, 1, 'F', 7, 'estandar'),
-    (62, 1, 'F', 8, 'estandar'),
-    (63, 1, 'F', 9, 'estandar'),
-    (64, 1, 'F', 10, 'estandar'),
-    (65, 1, 'G', 1, 'estandar'),
-    (66, 1, 'G', 2, 'estandar'),
-    (67, 1, 'G', 3, 'estandar'),
-    (68, 1, 'G', 4, 'estandar'),
-    (69, 1, 'G', 5, 'estandar'),
-    (70, 1, 'G', 6, 'estandar'),
-    (71, 1, 'G', 7, 'estandar'),
-    (72, 1, 'G', 8, 'estandar'),
-    (73, 1, 'G', 9, 'estandar'),
-    (74, 1, 'G', 10, 'estandar'),
-    (75, 1, 'H', 1, 'estandar'),
-    (76, 1, 'H', 2, 'estandar'),
-    (77, 1, 'H', 3, 'estandar'),
-    (78, 1, 'H', 4, 'estandar'),
-    (79, 1, 'H', 5, 'estandar'),
-    (80, 1, 'H', 6, 'estandar'),
-    (81, 1, 'H', 7, 'estandar'),
-    (82, 1, 'H', 8, 'estandar'),
-    (83, 1, 'H', 9, 'estandar'),
-    (84, 1, 'H', 10, 'estandar'),
-    (85, 1, 'I', 1, 'estandar'),
-    (86, 1, 'I', 2, 'estandar'),
-    (87, 1, 'I', 3, 'estandar'),
-    (88, 1, 'I', 4, 'estandar'),
-    (89, 1, 'I', 5, 'estandar'),
-    (90, 1, 'I', 6, 'estandar'),
-    (91, 1, 'I', 7, 'estandar'),
-    (92, 1, 'I', 8, 'estandar'),
-    (93, 1, 'I', 9, 'estandar'),
-    (94, 1, 'I', 10, 'estandar'),
-    (95, 1, 'J', 1, 'estandar'),
-    (96, 1, 'J', 2, 'estandar'),
-    (97, 1, 'J', 3, 'estandar'),
-    (98, 1, 'J', 4, 'estandar'),
-    (99, 1, 'J', 5, 'estandar'),
-    (100, 1, 'J', 6, 'estandar'),
-    (101, 1, 'J', 7, 'estandar'),
-    (102, 1, 'J', 8, 'estandar'),
-    (103, 1, 'J', 9, 'estandar'),
-    (104, 1, 'J', 10, 'estandar'),
-    (105, 1, 'K', 1, 'estandar'),
-    (106, 1, 'K', 2, 'estandar'),
-    (107, 1, 'K', 3, 'estandar'),
-    (108, 1, 'K', 4, 'estandar'),
-    (109, 1, 'K', 5, 'estandar'),
-    (110, 1, 'K', 6, 'estandar'),
-    (111, 1, 'K', 7, 'estandar'),
-    (112, 1, 'K', 8, 'estandar'),
-    (113, 1, 'K', 9, 'estandar'),
-    (114, 1, 'K', 10, 'estandar'),
-    (115, 1, 'L', 1, 'estandar'),
-    (116, 1, 'L', 2, 'estandar'),
-    (117, 1, 'L', 3, 'estandar'),
-    (118, 1, 'L', 4, 'estandar'),
-    (119, 1, 'L', 5, 'estandar'),
-    (120, 1, 'L', 6, 'estandar'),
-    (121, 1, 'L', 7, 'estandar'),
-    (122, 1, 'L', 8, 'estandar'),
-    (123, 1, 'L', 9, 'estandar'),
-    (124, 1, 'L', 10, 'estandar'),
-    (125, 1, 'M', 1, 'estandar'),
-    (126, 1, 'M', 2, 'estandar'),
-    (127, 1, 'M', 3, 'estandar'),
-    (128, 1, 'M', 4, 'estandar'),
-    (129, 1, 'M', 5, 'estandar'),
-    (130, 1, 'M', 6, 'estandar'),
-    (131, 1, 'M', 7, 'estandar'),
-    (132, 1, 'M', 8, 'estandar'),
-    (133, 1, 'M', 9, 'estandar'),
-    (134, 1, 'M', 10, 'estandar'),
-    (135, 1, 'N', 1, 'estandar'),
-    (136, 1, 'N', 2, 'estandar'),
-    (137, 1, 'N', 3, 'estandar'),
-    (138, 1, 'N', 4, 'estandar'),
-    (139, 1, 'N', 5, 'estandar'),
-    (140, 1, 'N', 6, 'estandar'),
-    (141, 1, 'N', 7, 'estandar'),
-    (142, 1, 'N', 8, 'estandar'),
-    (143, 1, 'N', 9, 'estandar'),
-    (144, 1, 'N', 10, 'estandar'),
-    (145, 1, 'O', 1, 'estandar'),
-    (146, 1, 'O', 2, 'estandar'),
-    (147, 1, 'O', 3, 'estandar'),
-    (148, 1, 'O', 4, 'estandar'),
-    (149, 1, 'O', 5, 'estandar'),
-    (150, 1, 'O', 6, 'estandar'),
-    (151, 1, 'O', 7, 'estandar'),
-    (152, 1, 'O', 8, 'estandar'),
-    (153, 1, 'O', 9, 'estandar'),
-    (154, 1, 'O', 10, 'estandar'),
-    (155, 2, 'A', 2, 'vip'),
-    (156, 2, 'A', 3, 'vip'),
-    (157, 2, 'A', 4, 'vip'),
-    (158, 2, 'A', 5, 'vip'),
-    (159, 2, 'A', 6, 'vip'),
-    (160, 2, 'A', 7, 'vip'),
-    (161, 2, 'A', 8, 'vip'),
-    (162, 2, 'A', 9, 'vip'),
-    (163, 2, 'A', 10, 'vip'),
-    (164, 2, 'B', 1, 'vip'),
-    (165, 2, 'B', 2, 'vip'),
-    (166, 2, 'B', 3, 'vip'),
-    (167, 2, 'B', 4, 'vip'),
-    (168, 2, 'B', 5, 'vip'),
-    (169, 2, 'B', 6, 'vip'),
-    (170, 2, 'B', 7, 'vip'),
-    (171, 2, 'B', 8, 'vip'),
-    (172, 2, 'B', 9, 'vip'),
-    (173, 2, 'B', 10, 'vip'),
-    (174, 2, 'C', 1, 'vip'),
-    (175, 2, 'C', 2, 'vip'),
-    (176, 2, 'C', 3, 'vip'),
-    (177, 2, 'C', 4, 'vip'),
-    (178, 2, 'C', 5, 'vip'),
-    (179, 2, 'C', 6, 'vip'),
-    (180, 2, 'C', 7, 'vip'),
-    (181, 2, 'C', 8, 'vip'),
-    (182, 2, 'C', 9, 'vip'),
-    (183, 2, 'C', 10, 'vip'),
-    (184, 2, 'D', 1, 'vip'),
-    (185, 2, 'D', 2, 'vip'),
-    (186, 2, 'D', 3, 'vip'),
-    (187, 2, 'D', 4, 'vip'),
-    (188, 2, 'D', 5, 'vip'),
-    (189, 2, 'D', 6, 'vip'),
-    (190, 2, 'D', 7, 'vip'),
-    (191, 2, 'D', 8, 'vip'),
-    (192, 2, 'D', 9, 'vip'),
-    (193, 2, 'D', 10, 'vip'),
-    (194, 2, 'E', 1, 'vip'),
-    (195, 2, 'E', 2, 'vip'),
-    (196, 2, 'E', 3, 'vip'),
-    (197, 2, 'E', 4, 'vip'),
-    (198, 2, 'E', 5, 'vip'),
-    (199, 2, 'E', 6, 'vip'),
-    (200, 2, 'E', 7, 'vip'),
-    (201, 2, 'E', 8, 'vip'),
-    (202, 2, 'E', 9, 'vip'),
-    (203, 2, 'E', 10, 'vip'),
-    (204, 3, 'A', 1, 'vip'),
-    (205, 3, 'A', 2, 'vip'),
-    (206, 3, 'A', 3, 'vip'),
-    (207, 3, 'A', 4, 'vip'),
-    (208, 3, 'A', 5, 'vip'),
-    (209, 3, 'A', 6, 'vip'),
-    (210, 3, 'A', 7, 'vip'),
-    (211, 3, 'A', 8, 'vip'),
-    (212, 3, 'A', 9, 'vip'),
-    (213, 3, 'A', 10, 'vip'),
-    (214, 3, 'B', 3, 'vip'),
-    (215, 3, 'B', 4, 'vip'),
-    (216, 3, 'B', 5, 'vip'),
-    (217, 3, 'B', 6, 'vip'),
-    (218, 3, 'B', 7, 'vip'),
-    (219, 3, 'B', 8, 'vip'),
-    (220, 3, 'B', 9, 'vip'),
-    (221, 3, 'B', 10, 'vip'),
-    (222, 3, 'C', 1, 'vip'),
-    (223, 3, 'C', 2, 'vip'),
-    (224, 3, 'C', 3, 'vip'),
-    (225, 3, 'C', 4, 'vip'),
-    (226, 3, 'C', 5, 'vip'),
-    (227, 3, 'C', 6, 'vip'),
-    (228, 3, 'C', 7, 'vip'),
-    (229, 3, 'C', 8, 'vip'),
-    (230, 3, 'C', 9, 'vip'),
-    (231, 3, 'C', 10, 'vip'),
-    (232, 3, 'D', 1, 'vip'),
-    (233, 3, 'D', 2, 'vip'),
-    (234, 3, 'D', 3, 'vip'),
-    (235, 3, 'D', 4, 'vip'),
-    (236, 3, 'D', 5, 'vip'),
-    (237, 3, 'D', 6, 'vip'),
-    (238, 3, 'D', 7, 'vip'),
-    (239, 3, 'D', 8, 'vip'),
-    (240, 3, 'D', 9, 'vip'),
-    (241, 3, 'D', 10, 'vip'),
-    (242, 3, 'E', 1, 'vip'),
-    (243, 3, 'E', 2, 'vip'),
-    (244, 3, 'E', 3, 'vip'),
-    (245, 3, 'E', 4, 'vip'),
-    (246, 3, 'E', 5, 'vip'),
-    (247, 3, 'E', 6, 'vip'),
-    (248, 3, 'E', 7, 'vip'),
-    (249, 3, 'E', 8, 'vip'),
-    (250, 3, 'E', 9, 'vip'),
-    (251, 3, 'E', 10, 'vip'),
-    (252, 4, 'A', 2, 'estandar'),
-    (253, 4, 'A', 3, 'estandar'),
-    (254, 4, 'A', 4, 'estandar'),
-    (255, 4, 'A', 5, 'estandar'),
-    (256, 4, 'A', 6, 'estandar'),
-    (257, 4, 'A', 7, 'estandar'),
-    (258, 4, 'A', 8, 'estandar'),
-    (259, 4, 'A', 9, 'estandar'),
-    (260, 4, 'A', 10, 'estandar'),
-    (261, 4, 'B', 1, 'estandar'),
-    (262, 4, 'B', 2, 'estandar'),
-    (263, 4, 'B', 3, 'estandar'),
-    (264, 4, 'B', 4, 'estandar'),
-    (265, 4, 'B', 5, 'estandar'),
-    (266, 4, 'B', 6, 'estandar'),
-    (267, 4, 'B', 7, 'estandar'),
-    (268, 4, 'B', 8, 'estandar'),
-    (269, 4, 'B', 9, 'estandar'),
-    (270, 4, 'B', 10, 'estandar'),
-    (271, 4, 'C', 1, 'estandar'),
-    (272, 4, 'C', 2, 'estandar'),
-    (273, 4, 'C', 3, 'estandar'),
-    (274, 4, 'C', 4, 'estandar'),
-    (275, 4, 'C', 5, 'estandar'),
-    (276, 4, 'C', 6, 'estandar'),
-    (277, 4, 'C', 7, 'estandar'),
-    (278, 4, 'C', 8, 'estandar'),
-    (279, 4, 'C', 9, 'estandar'),
-    (280, 4, 'C', 10, 'estandar'),
-    (281, 4, 'D', 1, 'estandar'),
-    (282, 4, 'D', 2, 'estandar'),
-    (283, 4, 'D', 3, 'estandar'),
-    (284, 4, 'D', 4, 'estandar'),
-    (285, 4, 'D', 5, 'estandar'),
-    (286, 4, 'D', 6, 'estandar'),
-    (287, 4, 'D', 7, 'estandar'),
-    (288, 4, 'D', 8, 'estandar'),
-    (289, 4, 'D', 9, 'estandar'),
-    (290, 4, 'D', 10, 'estandar'),
-    (291, 4, 'E', 1, 'estandar'),
-    (292, 4, 'E', 2, 'estandar'),
-    (293, 4, 'E', 3, 'estandar'),
-    (294, 4, 'E', 4, 'estandar'),
-    (295, 4, 'E', 5, 'estandar'),
-    (296, 4, 'E', 6, 'estandar'),
-    (297, 4, 'E', 7, 'estandar'),
-    (298, 4, 'E', 8, 'estandar'),
-    (299, 4, 'E', 9, 'estandar'),
-    (300, 4, 'E', 10, 'estandar'),
-    (301, 4, 'F', 1, 'estandar'),
-    (302, 4, 'F', 2, 'estandar'),
-    (303, 4, 'F', 3, 'estandar'),
-    (304, 4, 'F', 4, 'estandar'),
-    (305, 4, 'F', 5, 'estandar'),
-    (306, 4, 'F', 6, 'estandar'),
-    (307, 4, 'F', 7, 'estandar'),
-    (308, 4, 'F', 8, 'estandar'),
-    (309, 4, 'F', 9, 'estandar'),
-    (310, 4, 'F', 10, 'estandar'),
-    (311, 4, 'G', 1, 'estandar'),
-    (312, 4, 'G', 2, 'estandar'),
-    (313, 4, 'G', 3, 'estandar'),
-    (314, 4, 'G', 4, 'estandar'),
-    (315, 4, 'G', 5, 'estandar'),
-    (316, 4, 'G', 6, 'estandar'),
-    (317, 4, 'G', 7, 'estandar'),
-    (318, 4, 'G', 8, 'estandar'),
-    (319, 4, 'G', 9, 'estandar'),
-    (320, 4, 'G', 10, 'estandar'),
-    (321, 4, 'H', 1, 'estandar'),
-    (322, 4, 'H', 2, 'estandar'),
-    (323, 4, 'H', 3, 'estandar'),
-    (324, 4, 'H', 4, 'estandar'),
-    (325, 4, 'H', 5, 'estandar'),
-    (326, 4, 'H', 6, 'estandar'),
-    (327, 4, 'H', 7, 'estandar'),
-    (328, 4, 'H', 8, 'estandar'),
-    (329, 4, 'H', 9, 'estandar'),
-    (330, 4, 'H', 10, 'estandar'),
-    (331, 4, 'I', 1, 'estandar'),
-    (332, 4, 'I', 2, 'estandar'),
-    (333, 4, 'I', 3, 'estandar'),
-    (334, 4, 'I', 4, 'estandar'),
-    (335, 4, 'I', 5, 'estandar'),
-    (336, 4, 'I', 6, 'estandar'),
-    (337, 4, 'I', 7, 'estandar'),
-    (338, 4, 'I', 8, 'estandar'),
-    (339, 4, 'I', 9, 'estandar'),
-    (340, 4, 'I', 10, 'estandar'),
-    (341, 4, 'J', 1, 'estandar'),
-    (342, 4, 'J', 2, 'estandar'),
-    (343, 4, 'J', 3, 'estandar'),
-    (344, 4, 'J', 4, 'estandar'),
-    (345, 4, 'J', 5, 'estandar'),
-    (346, 4, 'J', 6, 'estandar'),
-    (347, 4, 'J', 7, 'estandar'),
-    (348, 4, 'J', 8, 'estandar'),
-    (349, 4, 'J', 9, 'estandar'),
-    (350, 4, 'J', 10, 'estandar'),
-    (351, 4, 'K', 1, 'estandar'),
-    (352, 4, 'K', 2, 'estandar'),
-    (353, 4, 'K', 3, 'estandar'),
-    (354, 4, 'K', 4, 'estandar'),
-    (355, 4, 'K', 5, 'estandar'),
-    (356, 4, 'K', 6, 'estandar'),
-    (357, 4, 'K', 7, 'estandar'),
-    (358, 4, 'K', 8, 'estandar'),
-    (359, 4, 'K', 9, 'estandar'),
-    (360, 4, 'K', 10, 'estandar'),
-    (361, 4, 'L', 1, 'estandar'),
-    (362, 4, 'L', 2, 'estandar'),
-    (363, 4, 'L', 3, 'estandar'),
-    (364, 4, 'L', 4, 'estandar'),
-    (365, 4, 'L', 5, 'estandar'),
-    (366, 4, 'L', 6, 'estandar'),
-    (367, 4, 'L', 7, 'estandar'),
-    (368, 4, 'L', 8, 'estandar'),
-    (369, 4, 'L', 9, 'estandar'),
-    (370, 4, 'L', 10, 'estandar');
+-- PELICULAS: 6 registros, con URLs de poster publicas de TMDb para el frontend
+-- Son enlaces de un servicio externo y pueden cambiar con el tiempo.
+INSERT INTO peliculas
+    (api_id, titulo, sinopsis, poster_url, duracion_min, clasificacion, genero, anio_estreno)
+VALUES
+    ('tt0816692', 'Interestelar', 'Un grupo de exploradores busca un nuevo hogar para la humanidad.', 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', 169, 'PG-13', 'Ciencia ficcion', 2014),
+    ('tt1375666', 'El origen', 'Un equipo intenta implantar una idea mediante los suenos.', 'https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg', 148, 'PG-13', 'Ciencia ficcion', 2010),
+    ('tt0120338', 'Titanic', 'Historia de amor a bordo de un transatlantico.', 'https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg', 194, 'PG-13', 'Romance', 1997),
+    ('tt0114709', 'Toy Story', 'Los juguetes cobran vida cuando nadie los ve.', 'https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg', 81, 'G', 'Animacion', 1995),
+    ('tt2380307', 'Coco', 'Un chico viaja al mundo de los muertos y descubre su historia familiar.', 'https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg', 105, 'PG', 'Animacion', 2017),
+    ('tt10872600', 'Spider-Man: No Way Home', 'Peter Parker enfrenta las consecuencias de una identidad revelada.', 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg', 148, 'PG-13', 'Accion', 2021);
 
--- 8. COMPRAS (datos_demo.sql, preservando los tres registros y sus importes)
--- IMPORTANTE: los totales 12000 y 7500 NO incluyen sus servicios agregados.
--- Se mantienen los importes originales para no alterar los datos proporcionados.
-INSERT INTO compras (id, usuario_id, funcion_id, codigo, total, estado, numero_factura) VALUES
-    (2, 2, 3, 'COMPRA-002', 12000.00, 'pagada', 'FAC-0001'),
-    (3, 3, 4, 'COMPRA-003', 7500.00, 'pagada', 'FAC-0002'),
-    (4, 4, 5, 'COMPRA-004', 5000.00, 'cancelada', 'FAC-0003');
+-- FUNCIONES: 10 registros (futuras, finalizadas y una cancelada)
+INSERT INTO funciones
+    (pelicula_id, sala_id, fecha_hora_inicio, fecha_hora_fin, precio_base, estado)
+VALUES
+    (1, 1, '2026-11-02 18:00:00', '2026-11-02 21:00:00', 8500.00, 'programada'),
+    (2, 1, '2026-11-02 21:15:00', '2026-11-02 23:50:00', 8000.00, 'programada'),
+    (3, 2, '2026-11-03 17:00:00', '2026-11-03 20:20:00', 7500.00, 'programada'),
+    (4, 2, '2026-11-03 20:45:00', '2026-11-03 22:15:00', 7000.00, 'programada'),
+    (5, 3, '2026-11-03 18:30:00', '2026-11-03 20:30:00', 7000.00, 'programada'),
+    (6, 1, '2026-11-04 19:00:00', '2026-11-04 21:35:00', 9000.00, 'programada'),
+    (1, 2, '2026-10-10 19:00:00', '2026-10-10 22:00:00', 6500.00, 'finalizada'),
+    (5, 3, '2026-10-15 18:00:00', '2026-10-15 20:00:00', 6500.00, 'finalizada'),
+    (2, 3, '2026-11-05 20:00:00', '2026-11-05 22:40:00', 8000.00, 'cancelada'),
+    (3, 4, '2026-11-06 17:30:00', '2026-11-06 20:50:00', 8000.00, 'programada');
 
--- 9. ENTRADAS (ids de butaca 4,5,6 respetados)
-INSERT INTO entradas (compra_id, funcion_id, butaca_id, precio, qr_codigo, estado) VALUES
-    (2, 3, 4, 6000.00, 'QR-ENTRY-002', 'valida'),
-    (2, 3, 5, 6000.00, 'QR-ENTRY-003', 'valida'),
-    (3, 4, 6, 7500.00, 'QR-ENTRY-004', 'valida');
+-- SERVICIOS: 6 registros
+INSERT INTO servicios (nombre, descripcion, categoria, precio, stock, imagen_url) VALUES
+    ('Pochoclos medianos', 'Pochoclos para una persona', 'Comida', 2500.00, 50, NULL),
+    ('Gaseosa 500 ml', 'Gaseosa individual', 'Bebida', 1800.00, 70, NULL),
+    ('Combo pochoclos y gaseosa', 'Pochoclos medianos y bebida', 'Combo', 4000.00, 30, NULL),
+    ('Nachos', 'Nachos con salsa de queso', 'Comida', 2900.00, 25, NULL),
+    ('Agua mineral', 'Botella de agua 500 ml', 'Bebida', 1500.00, 60, NULL),
+    ('Golosinas surtidas', 'Pack de golosinas', 'Comida', 1300.00, 40, NULL);
 
--- 10. SERVICIOS (tercer servicio id=4 porque datos_demo.sql lo referencia así)
-INSERT INTO servicios (id, nombre, descripcion, categoria, precio, stock) VALUES
-    (1, 'Nachos con Queso', 'Porción de nachos acompañados de salsa de queso caliente', 'Candy Bar', 4200.00, 30),
-    (2, 'Golosinas Variadas', 'Pack de chocolates y gomitas', 'Candy Bar', 2800.00, 100),
-    (4, 'Balde Pochoclo Gigante', 'Balde para compartir', 'Candy Bar', 4500.00, 40);
+-- COMPRAS: 10 registros (pendientes, pagadas, cancelada y usadas)
+-- CMP-010 vuelve a reservar una butaca que CMP-005 habia cancelado.
+-- Cada total coincide con sus entradas y sus servicios adicionales.
+INSERT INTO compras
+    (usuario_id, funcion_id, codigo, total, estado, fecha_compra,
+     email_enviado, fecha_cancelacion, motivo_cancelacion,
+     numero_factura, url_factura_pdf, factura_enviada)
+VALUES
+    (2, 1, 'CMP-001', 21000.00, 'pagada', '2026-10-27 14:00:00', TRUE, NULL, NULL, 'FAC-001', NULL, TRUE),
+    (3, 2, 'CMP-002', 11600.00, 'pendiente', '2026-10-28 16:00:00', FALSE, NULL, NULL, NULL, NULL, FALSE),
+    (4, 3, 'CMP-003',  7500.00, 'pagada', '2026-10-29 12:30:00', TRUE, NULL, NULL, 'FAC-003', NULL, TRUE),
+    (2, 7, 'CMP-004', 15500.00, 'usada', '2026-10-09 10:00:00', TRUE, NULL, NULL, 'FAC-004', NULL, TRUE),
+    (3, 5, 'CMP-005',  7000.00, 'cancelada', '2026-10-29 11:20:00', FALSE, '2026-10-30 09:00:00', 'Cambio de planes', NULL, NULL, FALSE),
+    (4, 6, 'CMP-006', 11900.00, 'pagada', '2026-10-29 15:00:00', TRUE, NULL, NULL, 'FAC-006', NULL, TRUE),
+    (3, 8, 'CMP-007',  8000.00, 'usada', '2026-10-14 13:00:00', TRUE, NULL, NULL, 'FAC-007', NULL, TRUE),
+    (2, 4, 'CMP-008', 11000.00, 'pagada', '2026-10-29 20:30:00', TRUE, NULL, NULL, 'FAC-008', NULL, TRUE),
+    (4, 1, 'CMP-009',  8500.00, 'pendiente', '2026-10-30 09:30:00', FALSE, NULL, NULL, NULL, NULL, FALSE),
+    (4, 5, 'CMP-010',  7000.00, 'pagada', '2026-10-30 11:00:00', TRUE, NULL, NULL, 'FAC-010', NULL, TRUE);
 
--- 11. COMPRA DE SERVICIOS (datos_demo.sql)
-INSERT INTO compra_servicios (compra_id, servicio_id, cantidad, precio_unitario, subtotal) VALUES
-    (2, 1, 1, 3500.00, 3500.00),
-    (2, 2, 1, 4200.00, 4200.00),
-    (3, 4, 1, 4500.00, 4500.00);
+-- ENTRADAS: 12 registros. La butaca 25 de funcion 5 aparece cancelada en CMP-005
+-- y vuelta a comprar en CMP-010; UNIQUE solo bloquea entradas NO canceladas.
+-- Las compras pendientes tienen estado 'pendiente' y qr_codigo NULL: se genera QR al pagar.
+-- La validacion del QR debe verificar tambien que la compra este pagada o usada.
+INSERT INTO entradas
+    (compra_id, funcion_id, butaca_id, precio, qr_codigo, estado, fecha_uso, fecha_cancelacion)
+VALUES
+    (1, 1,  1, 8500.00, 'QR-DEMO-CMP001-A1', 'valida', NULL, NULL),
+    (2, 2,  3, 8000.00, NULL, 'pendiente', NULL, NULL),
+    (3, 3, 13, 7500.00, 'QR-DEMO-CMP003-A1', 'valida', NULL, NULL),
+    (4, 7, 14, 6500.00, 'QR-DEMO-CMP004-A2', 'usada', '2026-10-10 18:55:00', NULL),
+    (4, 7, 15, 6500.00, 'QR-DEMO-CMP004-A3', 'usada', '2026-10-10 18:58:00', NULL),
+    (5, 5, 25, 7000.00, 'QR-DEMO-CMP005-A1', 'cancelada', NULL, '2026-10-30 09:00:00'),
+    (6, 6,  4, 9000.00, 'QR-DEMO-CMP006-A4', 'valida', NULL, NULL),
+    (7, 8, 26, 6500.00, 'QR-DEMO-CMP007-A2', 'usada', '2026-10-15 17:59:00', NULL),
+    (8, 4, 16, 7000.00, 'QR-DEMO-CMP008-A4', 'valida', NULL, NULL),
+    (9, 1,  5, 8500.00, NULL, 'pendiente', NULL, NULL),
+    (10, 5, 25, 7000.00, 'QR-DEMO-CMP010-A1', 'valida', NULL, NULL);
+
+-- SERVICIOS COMPRADOS: 6 registros
+INSERT INTO compra_servicios
+    (compra_id, servicio_id, cantidad, precio_unitario, subtotal)
+VALUES
+    (1, 3, 1, 4000.00, 4000.00),
+    (2, 2, 2, 1800.00, 3600.00),
+    (4, 1, 1, 2500.00, 2500.00),
+    (6, 4, 1, 2900.00, 2900.00),
+    (7, 5, 1, 1500.00, 1500.00),
+    (8, 3, 1, 4000.00, 4000.00);
+
+
+-- ---------------------------------------------
+-- 9. REGLAS QUE DEBE IMPLEMENTAR EL BACKEND
+-- ---------------------------------------------
+-- La base ya impide reservas activas duplicadas por (funcion_id, butaca_id).
+-- Para cancelar: actualizar compras.estado y entradas.estado a 'cancelada'
+-- DENTRO DE LA MISMA TRANSACCION. Asi se libera la butaca y se conserva el historial.
+-- Para pagar: verificar compra pendiente y generar qr_codigo (UNIQUE),
+-- pasando sus entradas de 'pendiente' a 'valida' en una transaccion.
+-- Para reservas pendientes abandonadas: definir una politica de expiracion
+-- que cancele compra+entradas en una transaccion para liberar las butacas.
+-- El backend debe verificar que butacas.sala_id = funciones.sala_id,
+-- que la sala no tenga funciones superpuestas y que los intervalos sean validos.
+-- Al programar/editar funciones, comprobar solapamientos bajo bloqueo/transaccion:
+--   existente.fecha_hora_inicio < nueva_fin
+--   AND existente.fecha_hora_fin > nueva_inicio
+-- Los locales, usuarios, posters y entradas de este archivo son datos DEMO.
+-- Al borrar un servicio con compras asociadas, la FK lo rechaza (manejar HTTP 409).
+-- El SQL NO envia emails, no genera PDFs y no crea codigos QR reales:
+-- esas tareas corresponden al backend y a los endpoints del TP.
