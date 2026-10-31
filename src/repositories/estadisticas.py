@@ -1,12 +1,12 @@
 from sqlalchemy import text
-from src.utils.config import engine
+from src.utils.config import db
 
 def obtener_ocupacion_funciones():
     """
     Ejecuta la consulta SQL para calcular el porcentaje de ocupación por función.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = """
                 SELECT 
                     f.id AS funcion_id,
@@ -37,7 +37,7 @@ def obtener_ocupacion_funciones():
 
             ocupacion = [dict(zip(result.keys(), row)) for row in rows]
 
-            # Como MySQL devuelve hora_inicio como timedelta y jsonify no lo puede convertir hago:
+            # Paso la fecha a texto en formato estándar (ej: "2026-12-10T18:00:00") para el JSON
             for fila in ocupacion:
                 fila["fecha_hora_inicio"] = fila["fecha_hora_inicio"].isoformat()
 
@@ -52,7 +52,7 @@ def obtener_ocupacion_peliculas():
     Primero agrupa por función (subconsulta) para no inflar los totales.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = """
                 SELECT 
                     p.id AS pelicula_id,
@@ -102,7 +102,7 @@ def obtener_ocupacion_franjas_horarias():
     Ejecuta la consulta SQL para agrupar y contar las entradas vendidas por franja horaria.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = """
                 SELECT 
                     HOUR(f.fecha_hora_inicio) AS hora,

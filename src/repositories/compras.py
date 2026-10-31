@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import text
-from src.utils.config import engine
+from src.utils.config import db
 
 def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario):
     try:
@@ -8,7 +8,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
         
         codigo_compra = f"COMP-{uuid.uuid4().hex[:12].upper()}"
 
-        with engine.begin() as conn:
+        with db.begin() as conn:
             # 1. Insertar la compra
             query_compra = text("""
                 INSERT INTO compras (usuario_id, funcion_id, codigo, total, estado)

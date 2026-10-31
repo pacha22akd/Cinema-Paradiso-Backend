@@ -1,12 +1,12 @@
 from sqlalchemy import text
-from src.utils.config import engine
+from src.utils.config import db
 
 def obtener_funciones_por_pelicula(pelicula_id):
     """
     Obtiene todas las funciones vigentes de una película con datos de la sala y local.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = text("""
                 SELECT 
                     f.id AS funcion_id,
@@ -50,7 +50,7 @@ def obtener_funcion_por_id(funcion_id):
     Obtiene los detalles de una función por su ID.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = text("""
                 SELECT *, fecha_hora_inicio <= NOW() AS ya_empezo
                 FROM funciones
@@ -69,7 +69,7 @@ def obtener_butacas_por_funcion(funcion_id, sala_id):
     Obtiene el mapa de butacas de la sala indicando si están ocupadas o disponibles para la función.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = text("""
                 SELECT 
                     b.id AS butaca_id,

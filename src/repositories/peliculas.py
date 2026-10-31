@@ -1,12 +1,12 @@
 from sqlalchemy import text
-from src.utils.config import engine
+from src.utils.config import db
 
 def obtener_pelicula_por_id(pelicula_id):
     """
     Ejecuta la consulta SQL para traer los datos de una película por ID.
     """
     try: 
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = "SELECT * FROM peliculas WHERE id = :id"
             result = conn.execute(text(query), {"id": pelicula_id})
             row = result.fetchone()
@@ -18,7 +18,7 @@ def obtener_pelicula_por_id(pelicula_id):
 
 def obtener_peliculas_cartelera(genero=None, titulo=None):
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query_str = """
                 SELECT id, api_id, titulo, sinopsis, poster_url, duracion_min, clasificacion, genero, anio_estreno
                 FROM peliculas

@@ -1,12 +1,12 @@
 from sqlalchemy import text
-from src.utils.config import engine
+from src.utils.config import db
 
 def obtener_salas():
     """
     Ejecuta la consulta SQL para traer la lista completa de salas desde la BD.
     """
     try:
-        with engine.connect() as conn:
+        with db.connect() as conn:
             query = "SELECT * FROM salas"
             result = conn.execute(text(query))
             rows = result.fetchall()
