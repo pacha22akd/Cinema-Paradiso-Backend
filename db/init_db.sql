@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS entradas (
     funcion_id        INT NOT NULL,
     butaca_id         INT NOT NULL,
     precio            FLOAT NOT NULL,
-    qr_codigo         VARCHAR(100) UNIQUE,
+    qr_codigo         VARCHAR(100) NOT NULL UNIQUE,
     estado            ENUM('pendiente','valida','usada','cancelada') NOT NULL DEFAULT 'pendiente',
     -- MySQL permite multiples NULL en UNIQUE. Una entrada cancelada deja de bloquear su butaca.
     butaca_ocupada_id INT GENERATED ALWAYS AS (
