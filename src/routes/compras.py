@@ -17,8 +17,8 @@ def crear_compra():
 
         resultado = realizar_proceso_compra(usuario_id, funcion_id, butaca_ids)
 
-        if resultado is None:
-            return devolver_error("No se pudo procesar la compra. Verifique que la función exista, los datos sean válidos y que las butacas no estén ocupadas", 400)
+        if "error" in resultado:
+            return devolver_error(resultado["error"], resultado["status"])  
 
         return jsonify({
             "mensaje": "Compra realizada con éxito",

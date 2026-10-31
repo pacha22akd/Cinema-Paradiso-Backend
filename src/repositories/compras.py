@@ -1,4 +1,4 @@
-import random
+import uuid
 from sqlalchemy import text
 from src.utils.config import engine
 
@@ -6,8 +6,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
     try:
         monto_total = len(butaca_ids) * precio_unitario
         
-        numero_azar = random.randint(100000, 999999)
-        codigo_compra = f"COMP-{numero_azar}"
+        codigo_compra = f"COMP-{uuid.uuid4().hex[:12].upper()}"
 
         with engine.begin() as conn:
             # 1. Insertar la compra
@@ -30,8 +29,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
             """)
             
             for b_id in butaca_ids:
-                qr_azar = random.randint(1000, 9999)
-                qr_codigo = f"QR-F{funcion_id}-B{b_id}-{qr_azar}"
+                qr_codigo = f"QR-F{funcion_id}-B{b_id}-{uuid.uuid4().hex}"
                 
                 conn.execute(query_entrada, {
                     "compra_id": compra_id,
