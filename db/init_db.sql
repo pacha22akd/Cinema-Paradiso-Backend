@@ -294,7 +294,7 @@ INSERT INTO compras
      email_enviado, fecha_cancelacion, motivo_cancelacion,
      numero_factura, url_factura_pdf, factura_enviada)
 VALUES
-    (2, 1, 'CMP-001', 21000.00, 'pagada', '2026-10-27 14:00:00', TRUE, NULL, NULL, 'FAC-001', NULL, TRUE),
+    (2, 1, 'CMP-001', 12500.00, 'pagada', '2026-10-27 14:00:00', TRUE, NULL, NULL, 'FAC-001', NULL, TRUE),
     (3, 2, 'CMP-002', 11600.00, 'pendiente', '2026-10-28 16:00:00', FALSE, NULL, NULL, NULL, NULL, FALSE),
     (4, 3, 'CMP-003',  7500.00, 'pagada', '2026-10-29 12:30:00', TRUE, NULL, NULL, 'FAC-003', NULL, TRUE),
     (2, 7, 'CMP-004', 15500.00, 'usada', '2026-10-09 10:00:00', TRUE, NULL, NULL, 'FAC-004', NULL, TRUE),
@@ -305,15 +305,15 @@ VALUES
     (4, 1, 'CMP-009',  8500.00, 'pendiente', '2026-10-30 09:30:00', FALSE, NULL, NULL, NULL, NULL, FALSE),
     (4, 5, 'CMP-010',  7000.00, 'pagada', '2026-10-30 11:00:00', TRUE, NULL, NULL, 'FAC-010', NULL, TRUE);
 
--- ENTRADAS: 12 registros. La butaca 25 de funcion 5 aparece cancelada en CMP-005
+-- ENTRADAS: 11 registros. La butaca 25 de funcion 5 aparece cancelada en CMP-005
 -- y vuelta a comprar en CMP-010; UNIQUE solo bloquea entradas NO canceladas.
--- Las compras pendientes tienen estado 'pendiente' y qr_codigo NULL: se genera QR al pagar.
+-- Toda entrada tiene QR desde que se crea; las de compras pendientes quedan en estado 'pendiente'.
 -- La validacion del QR debe verificar tambien que la compra este pagada o usada.
 INSERT INTO entradas
     (compra_id, funcion_id, butaca_id, precio, qr_codigo, estado, fecha_uso, fecha_cancelacion)
 VALUES
     (1, 1,  1, 8500.00, 'QR-DEMO-CMP001-A1', 'valida', NULL, NULL),
-    (2, 2,  3, 8000.00, NULL, 'pendiente', NULL, NULL),
+    (2, 2,  3, 8000.00, 'QR-DEMO-CMP002-A3', 'pendiente', NULL, NULL),
     (3, 3, 13, 7500.00, 'QR-DEMO-CMP003-A1', 'valida', NULL, NULL),
     (4, 7, 14, 6500.00, 'QR-DEMO-CMP004-A2', 'usada', '2026-10-10 18:55:00', NULL),
     (4, 7, 15, 6500.00, 'QR-DEMO-CMP004-A3', 'usada', '2026-10-10 18:58:00', NULL),
@@ -321,7 +321,7 @@ VALUES
     (6, 6,  4, 9000.00, 'QR-DEMO-CMP006-A4', 'valida', NULL, NULL),
     (7, 8, 26, 6500.00, 'QR-DEMO-CMP007-A2', 'usada', '2026-10-15 17:59:00', NULL),
     (8, 4, 16, 7000.00, 'QR-DEMO-CMP008-A4', 'valida', NULL, NULL),
-    (9, 1,  5, 8500.00, NULL, 'pendiente', NULL, NULL),
+    (9, 1,  5, 8500.00, 'QR-DEMO-CMP009-B1', 'pendiente', NULL, NULL),
     (10, 5, 25, 7000.00, 'QR-DEMO-CMP010-A1', 'valida', NULL, NULL);
 
 -- SERVICIOS COMPRADOS: 6 registros
