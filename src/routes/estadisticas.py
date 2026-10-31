@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify
-from src.repositories.estadisticas import (
-    obtener_ocupacion_funciones, 
-    obtener_ocupacion_peliculas,
-    obtener_ocupacion_franjas_horarias
+from src.services.estadisticas import (
+    listar_ocupacion_funciones,
+    listar_ocupacion_peliculas,
+    listar_franjas_horarias
 )
 from src.utils.errores import devolver_error
 
@@ -11,7 +11,7 @@ estadisticas_bp = Blueprint('estadisticas', __name__)
 @estadisticas_bp.route('/admin/estadisticas/ocupacion/funciones', methods=['GET'])
 def obtener_ocupacion_por_funciones():
     try: 
-        datos = obtener_ocupacion_funciones()
+        datos = listar_ocupacion_funciones()
 
         if datos is None:
             return devolver_error("Error al calcular las estadísticas de ocupación por funciones", 500)
@@ -23,7 +23,7 @@ def obtener_ocupacion_por_funciones():
 @estadisticas_bp.route('/admin/estadisticas/ocupacion/peliculas', methods=['GET'])
 def obtener_ocupacion_por_peliculas():
     try:
-        datos = obtener_ocupacion_peliculas()
+        datos = listar_ocupacion_peliculas()  
 
         if datos is None:
             return devolver_error("Error al calcular las estadísticas de ocupación por película", 500)
@@ -35,7 +35,7 @@ def obtener_ocupacion_por_peliculas():
 @estadisticas_bp.route('/admin/estadisticas/franjas_horarias', methods=['GET'])
 def obtener_franjas_horarias():
     try:
-        datos = obtener_ocupacion_franjas_horarias()
+        datos = listar_franjas_horarias()
 
         if datos is None:
             return devolver_error("Error al calcular las estadísticas por franja horaria", 500)
