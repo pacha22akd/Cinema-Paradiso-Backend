@@ -19,4 +19,4 @@ url = URL.create(
     database=DB_NAME
 )
 
-engine = create_engine(url, pool_pre_ping=True)
+db = create_engine(url, pool_pre_ping=True)
