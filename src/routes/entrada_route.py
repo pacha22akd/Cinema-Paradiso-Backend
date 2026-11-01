@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services import entradas_services
+from src.utils.errores import devolver_error
 
 entradas_bp = Blueprint("entradas", __name__)
 
@@ -16,7 +17,7 @@ def post_validar_qr():
         return jsonify(resultado), 200
 
     except ValueError as e:
-        return jsonify({"message": str(e)}), 400
+        return devolver_error(str(e), 400)
 
     except Exception as e:
-        return jsonify({"message": "Error interno", "error": str(e)}), 500
+        return devolver_error(str(e), 500)
