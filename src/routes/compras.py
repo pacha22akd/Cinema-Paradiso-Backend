@@ -7,8 +7,8 @@ compras_bp = Blueprint('compras', __name__)
 @compras_bp.route('/compras', methods=['POST'])
 def crear_compra():
     try:
-        datos = request.get_json()
-        if not datos:
+        datos = request.get_json(silent=True)
+        if not isinstance(datos, dict):
             return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
 
         usuario_id = datos.get('usuario_id')
