@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from config import db
+from src.utils.config import db
 
 def buscar_entrada_por_qr(codigo):
 
