@@ -8,7 +8,7 @@ estadisticas_bp = Blueprint("estadisticas", __name__)
 def get_cancelaciones():
 
     try:
-        resultado = estadisticas_service.consultar_cancelaciones()
+        resultado = estadisticas_services.consultar_cancelaciones()
         return jsonify(resultado), 200
 
     except Exception as e:
