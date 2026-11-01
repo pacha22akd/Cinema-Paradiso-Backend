@@ -10,7 +10,7 @@ def post_validar_qr():
     datos = request.get_json()
 
     try:
-        resultado = entradas_service.validar_qr(
+        resultado = entrada_services.validar_qr(
             datos.get("qr_codigo"),
             datos.get("funcion_id"),
         )
