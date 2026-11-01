@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from services import entradas_services
-from src.utils.errores import devolver_error
+from services import entrada_services
+from errores import devolver_error
 
 entradas_bp = Blueprint("entradas", __name__)
 

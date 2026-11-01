@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from src.utils.config import db
+from config import db
 
 def buscar_entrada_por_qr(codigo):
 
@@ -25,7 +25,7 @@ def marcar_entrada_usada(id):
 
     query = """ UPDATE entradas SET estado = 'usada', fecha_uso = NOW() WHERE id = :id AND estado = 'valida' """
 
-    valores {"id": id}
+    valores = {"id": id}
 
     conn = db.connect()
     resultado = conn.execute(text(query), valores)

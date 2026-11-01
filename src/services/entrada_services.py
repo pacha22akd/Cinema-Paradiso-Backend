@@ -1,5 +1,5 @@
 from datetime import date
-from repositories import entradas_repository
+from repositories import entrada_repository
 
 def validar_qr(codigo, funcion_id):
 
