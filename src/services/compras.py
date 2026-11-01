@@ -1,19 +1,12 @@
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
+from src.validators.compras import validar_datos_compra
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
-    # 1. Validaciones de presencia y formato de datos
-    if not usuario_id or not funcion_id or not butaca_ids:
-        return {"error": "Faltan datos: usuario_id, funcion_id y butaca_ids son obligatorios", "status": 400}  
-
-    if not isinstance(butaca_ids, list) or len(butaca_ids) == 0:
-        return {"error": "butaca_ids debe ser una lista con al menos una butaca", "status": 400} 
-
-    butacas_vistas = []
-    for b_id in butaca_ids:
-        if b_id in butacas_vistas:
-            return {"error": "Hay butacas repetidas en la solicitud", "status": 400}
-        butacas_vistas.append(b_id)
+    # 1. Validaciones de formato
+    error = validar_datos_compra(usuario_id, funcion_id, butaca_ids)
+    if error:
+        return error
 
     # 2. Validar que la función solicitada exista
     funcion = obtener_funcion_por_id(funcion_id)
@@ -41,7 +34,7 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
 
         if butaca_encontrada["estado_disponibilidad"] == "ocupada":
             return {"error": f"La butaca {b_id} ya está ocupada", "status": 409}
-            
+
     # 3. Obtener el precio unitario y ejecutar la transacción
     precio_unitario = funcion["precio_base"]
     resultado = registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario)
