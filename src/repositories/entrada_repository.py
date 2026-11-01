@@ -3,17 +3,17 @@ from src.utils.config import db
 
 def buscar_entrada_por_qr(codigo):
 
-    query = """ SELECT e.id, e.funcion_id, e.estado, f.fecha, f.estado AS estado_funcion 
+    query = """ SELECT e.id, e.funcion_id, e.estado, f.fecha_hora_inicio, f.estado AS estado_funcion 
     FROM entradas e 
     JOIN compras c on e.compra_id = c.id
     JOIN funciones f ON e.funcion_id = f.id
     WHERE e.qr_codigo = :codigo """
 
-    valores = {"qr_codigo": codigo}
+    valores = {"codigo": codigo}
 
     conn = db.connect()
     resultado = conn.execute(text(query), valores)
-    filas = [dict(row.mapping) for row in resultado]
+    filas = [dict(row._mapping) for row in resultado]
     conn.close
 
     if len(filas) == 0:
