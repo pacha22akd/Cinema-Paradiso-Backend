@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 from services import estadisticas_services
+from src.utils.errores import devolver_error
 
 estadisticas_bp = Blueprint("estadisticas", __name__)
 
@@ -11,4 +12,4 @@ def get_cancelaciones():
         return jsonify(resultado), 200
 
     except Exception as e:
-        return jsonify({"message": "Error interno", "error": str(e)}), 500
+        return devolver_error(str(e), 500)
