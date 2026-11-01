@@ -1,5 +1,4 @@
-from flask import Blueprint
-from flask import jsonify
+from flask import Blueprint, request, jsonify
 from services import servicios_services
 from src.utils.errores import devolver_error
 
@@ -41,8 +40,8 @@ def nuevo_servicio():
     except Exception as e:
         return devolver_error(str(e), 500)
 
-@servicios_bp.route('/admin/servicios/{id}', methods = ['PATCH'])
-def patch_servicio():
+@servicios_bp.route('/admin/servicios/<int:id>', methods = ['PATCH'])
+def patch_servicio(id):
 
     datos = request.get_json()
 
@@ -57,10 +56,10 @@ def patch_servicio():
         datos.get("imagen_url"),
         )
     
-    if existe == False:
-        return devolver_error("No existe el servicio buscado", 404)
+        if existe == False:
+            return devolver_error("No existe el servicio buscado", 404)
 
-    return jsonify({"message": "Servicio modificado con éxito."}), 200
+        return jsonify({"message": "Servicio modificado con éxito."}), 200
     
     except Exception as e:
         return devolver_error(str(e), 500)
@@ -70,7 +69,7 @@ def patch_servicio():
 def delete_servicio(id):
 
     try:
-        existe = servicios_service.quitar_servicio(id)
+        existe = servicios_services.quitar_servicio(id)
 
         if existe == False:
             return devolver_error("No existe el servicio buscado.", 404)
@@ -78,4 +77,4 @@ def delete_servicio(id):
         return jsonify({"message": "Servicio eliminado con éxito."}), 200
 
     except Exception as e:
-        return devolver_error(str(e)), 500
+        return devolver_error(str(e), 500)
