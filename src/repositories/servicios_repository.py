@@ -3,11 +3,27 @@ from src.utils.config import db
 
 def obtener_servicios():
 
-    query = """SELECT * from servicios """
-    result = conn.execute(text(query))
+    query = """SELECT * FROM servicios """
+   
+    conn = db.connect()
+    resultado = conn.execute(text(query))
+
+    servicios = []
+    for fila in resultado:
+        servicio = {
+            "id": fila.id,
+            "nombre": fila.nombre,
+            "descripcion": fila.descripcion,
+            "categoria": fila.categoria,
+            "precio": fila.precio,
+            "stock": fila.stock,
+            "imagen_url": fila.imagen_url,
+        }
+        servicios.append(servicio)
+
     conn.close()
-    
-    return result
+
+    return servicios
 
     
 def agregar_servicio(nombre, descripcion, categoria, precio, stock, imagen_url):
@@ -27,7 +43,7 @@ def agregar_servicio(nombre, descripcion, categoria, precio, stock, imagen_url):
 def modificar_servicio(id, nombre, descripcion, categoria, precio, stock, imagen_url):
 
     conn = db.connect()
-    query = """UPDATE servicios SET nombre = :nombre, descripcion = :descripcion, categoria = :categoria, precio = :precio, stock = :stock, imagen_url = :imagen_url WHERE id == :id"""
+    query = """UPDATE servicios SET nombre = :nombre, descripcion = :descripcion, categoria = :categoria, precio = :precio, stock = :stock, imagen_url = :imagen_url WHERE id = :id"""
 
     valores = {
         "id": id, "nombre": nombre, "descripcion": descripcion, "categoria": categoria,
@@ -43,10 +59,12 @@ def modificar_servicio(id, nombre, descripcion, categoria, precio, stock, imagen
 
 def eliminar_servicio(id):
 
-    query = f"DELETE FROM servicios WHERE id = {id}"
+    query = """ DELETE FROM servicios WHERE id = :id """
+
+    valores = {"id": id}
 
     conn = db.connect()
-    resultado = conn.execute(text(query))
+    resultado = conn.execute(text(query), valores)
     conn.commit()
     filas = resultado.rowcount
     conn.close()
