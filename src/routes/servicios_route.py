@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask import jsonify
 from services import servicios_services
+from src.utils.errores import devolver_error
 
 servicios_bp = Blueprint("servicios", __name__)
 
@@ -10,12 +11,12 @@ def obtener_servicios():
     try:
         servicios = servicios_services.listar_servicios()
         if not servicios:
-            return jsonify({'message': "No hay servicios actualmente"}), 404
+            return devolver_error("No hay servicios actualmente", 404)
 
         return jsonify(servicios), 200
     
     except Exception as e:
-        return jsonify({"message": "Error interno", "error": str(e)}), 500
+        return devolver_error(str(e), 500)
 
 
 @servicios_bp.route('/admin/servicios', methods = ['POST'])
@@ -34,8 +35,11 @@ def nuevo_servicio():
         )
         return jsonify({"message": "Se creó el servicio correspondiente"}), 200
 
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+
     except Exception as e:
-        return jsonify({"message": "Error interno", "error": str(e)}), 500
+        return devolver_error(str(e), 500)
 
 @servicios_bp.route('/admin/servicios/{id}', methods = ['PATCH'])
 def patch_servicio():
@@ -54,12 +58,12 @@ def patch_servicio():
         )
     
     if existe == False:
-        return jsonify({"message": "No existe el servicio buscado."}), 404
+        return devolver_error("No existe el servicio buscado", 404)
 
     return jsonify({"message": "Servicio modificado con éxito."}), 200
     
     except Exception as e:
-        return jsonify({"message": "Error interno", "error": str(e)}), 500
+        return devolver_error(str(e), 500)
 
 
 @servicios_bp.route("/admin/servicios/<int:id>", methods=["DELETE"])
@@ -69,9 +73,9 @@ def delete_servicio(id):
         existe = servicios_service.quitar_servicio(id)
 
         if existe == False:
-            return jsonify({"message": "No existe el servicio buscado."}), 404
+            return devolver_error("No existe el servicio buscado.", 404)
 
         return jsonify({"message": "Servicio eliminado con éxito."}), 200
 
     except Exception as e:
-        return jsonify({"message": "Error interno", "error": str(e)}), 500
+        return devolver_error(str(e)), 500
