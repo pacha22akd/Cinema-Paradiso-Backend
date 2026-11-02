@@ -14,9 +14,7 @@ def consultar_pelicula_externa():
     titulo = request.args.get("titulo")
     anio = request.args.get("anio")
 
-    es_valido, titulo, anio, descripcion_error = peliculas_validator.validar_busqueda_externa(
-        titulo, anio
-    )
+    es_valido, titulo, anio, descripcion_error = peliculas_validator.validar_busqueda_externa(titulo, anio, request.args)
 
     if not es_valido:
         return errores.devolver_error(descripcion_error, 400)

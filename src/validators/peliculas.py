@@ -1,4 +1,14 @@
-def validar_busqueda_externa(titulo=None, anio=None):
+def validar_busqueda_externa(titulo, anio, parametros):
+
+    filtros_permitidos = ("titulo", "anio")
+
+    for parametro in parametros:
+
+        if parametro not in filtros_permitidos:
+            return False, None, None, f"El filtro {parametro} no es valido"
+
+        if len(parametros.getlist(parametro)) > 1:
+            return False, None, None, f"El filtro {parametro} no puede enviarse mas de una vez"
 
     if titulo is None:
         return False, None, None, "El titulo es obligatorio"
