@@ -14,9 +14,7 @@ def consultar_peliculas():
     titulo = request.args.get("titulo")
     genero = request.args.get("genero")
 
-    es_valido, titulo, genero, descripcion_error = peliculas_validator.validar_filtros_peliculas(
-        titulo, genero
-    )
+    es_valido, titulo, genero, descripcion_error = peliculas_validator.validar_filtros_peliculas(titulo, genero, request.args)
 
     if not es_valido:
         return errores.devolver_error(descripcion_error, 400)
