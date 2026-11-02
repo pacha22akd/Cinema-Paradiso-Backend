@@ -14,9 +14,7 @@ def obtener_ventas_genero():
     fecha_desde = request.args.get("fecha_desde")
     fecha_hasta = request.args.get("fecha_hasta")
 
-    es_valido, fecha_desde, fecha_hasta, descripcion_error = estadisticas_validator.validar_fechas_ventas(
-        fecha_desde, fecha_hasta
-    )
+    es_valido, fecha_desde, fecha_hasta, descripcion_error = estadisticas_validator.validar_fechas_ventas(fecha_desde, fecha_hasta, request.args)
 
     if not es_valido:
         return errores.devolver_error(descripcion_error, 400)

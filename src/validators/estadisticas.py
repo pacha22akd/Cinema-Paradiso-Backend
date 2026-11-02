@@ -1,6 +1,17 @@
 from datetime import datetime
 
-def validar_fechas_ventas(fecha_desde=None, fecha_hasta=None):
+
+def validar_fechas_ventas(fecha_desde, fecha_hasta, parametros):
+
+    filtros_permitidos = ("fecha_desde", "fecha_hasta")
+
+    for parametro in parametros:
+
+        if parametro not in filtros_permitidos:
+            return False, None, None, f"El filtro {parametro} no es valido"
+
+        if len(parametros.getlist(parametro)) > 1:
+            return False, None, None, f"El filtro {parametro} no puede enviarse mas de una vez"
 
     for fecha in (fecha_desde, fecha_hasta):
 
