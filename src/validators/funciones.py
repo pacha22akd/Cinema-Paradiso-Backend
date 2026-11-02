@@ -46,3 +46,56 @@ def validar_datos_funcion(datos):
         return False, "El estado no es válido"
 
     return True, None
+
+
+def validar_modificacion_funcion(datos):
+
+    if not isinstance(datos, dict):
+        return False, None, "El cuerpo debe ser un objeto JSON"
+
+    if len(datos) == 0:
+        return False, None, "Debe enviar al menos un campo para modificar"
+
+    campos_permitidos = (
+        "pelicula_id",
+        "sala_id",
+        "fecha_hora_inicio",
+        "fecha_hora_fin",
+        "precio_base"
+    )
+
+    funcion = {}
+
+    for campo, valor in datos.items():
+
+        if campo not in campos_permitidos:
+            return False, None, f"El campo {campo} no existe o no se puede modificar"
+
+        if campo in ("pelicula_id", "sala_id"):
+
+            if type(valor) is not int or valor <= 0:
+                return False, None, f"El campo {campo} debe ser un entero positivo"
+
+            funcion[campo] = valor
+
+        elif campo in ("fecha_hora_inicio", "fecha_hora_fin"):
+
+            try:
+                datetime.fromisoformat(valor)
+            except (ValueError, TypeError):
+                return False, None, f"El campo {campo} debe tener un formato de fecha válido"
+
+            funcion[campo] = valor
+
+        elif campo == "precio_base":
+
+            if (
+                isinstance(valor, bool)
+                or not isinstance(valor, (int, float))
+                or valor < 0
+            ):
+                return False, None, "El precio debe ser un número mayor o igual a cero"
+
+            funcion[campo] = valor
+
+    return True, funcion, None
