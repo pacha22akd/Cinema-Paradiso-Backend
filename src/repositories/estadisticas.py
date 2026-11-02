@@ -30,6 +30,7 @@ def obtener_ocupacion_funciones():
                     s.nombre, 
                     f.fecha_hora_inicio,
                     s.capacidad
+                ORDER BY f.fecha_hora_inicio
             """
 
             result = conn.execute(text(query))
