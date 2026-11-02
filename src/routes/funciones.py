@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
-from src.services.funciones import listar_funciones, buscar_funcion_por_id
+from src.services.funciones import listar_funciones, buscar_funcion_por_id, crear_nueva_funcion
+from src.validators.funciones import validar_datos_funcion
 from src.utils.errores import devolver_error
+from flask import request
 funciones_bp = Blueprint('funciones_bp', __name__)
 
 @funciones_bp.route('/admin/funciones', methods=['GET'])
@@ -20,3 +22,17 @@ def obtener_funcion(id_funcion):
         return devolver_error(f"No se encontró la función con ID {id_funcion}", 404)
     
     return jsonify(funcion), 200
+
+@funciones_bp.route('/admin/funciones', methods=['POST'])
+def crear_funcion():
+    datos_funcion = request.get_json()
+    
+    valido, error = validar_datos_funcion(datos_funcion)
+    if not valido:
+        return devolver_error(error, 400)
+    nueva_funcion = crear_nueva_funcion(datos_funcion)
+    
+    if not nueva_funcion:
+        return devolver_error("Error al crear función", 500)
+    
+    return jsonify({"mensaje": "Función creada correctamente"}), 201

@@ -29,3 +29,20 @@ def obtener_funcion_por_id(id_funcion):
     except Exception as e:
         print(f"Error al obtener función por ID: {e}")
         return None
+
+def crear_funcion(datos_funcion):
+    try:
+        with db.connect() as conn:
+            query = text("""
+                INSERT INTO funciones (pelicula_id, sala_id, fecha_hora_inicio, fecha_hora_fin, precio_base)
+                
+                VALUES (:pelicula_id, :sala_id, :fecha_hora_inicio, :fecha_hora_fin, :precio_base)
+            """)
+            conn.execute(query, datos_funcion)
+            conn.commit()
+            return True
+    except Exception as e:
+        print(f"Error al crear función: {e}")
+        return False
+    finally:
+        conn.close()
