@@ -1,6 +1,7 @@
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
 from src.validators.compras import validar_datos_compra
+from src.repositories import compras
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     # 1. Validaciones de formato
@@ -43,3 +44,16 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
         return {"error": "No se pudo registrar la compra", "status": 500}
 
     return resultado
+
+
+def obtener_compra(id_compra):
+    compra = compras.obtener_compra_por_id(id_compra)
+
+    if compra is None:
+        return {"error": "No existe la compra buscada", "status": 404}
+
+    compra["fecha_compra"] = str(compra["fecha_compra"]) if compra["fecha_compra"] else None
+    compra["fecha_hora_inicio"] = str(compra["fecha_hora_inicio"]) if compra["fecha_hora_inicio"] else None
+    compra["fecha_hora_fin"] = str(compra["fecha_hora_fin"]) if compra["fecha_hora_fin"] else None
+
+    return compra

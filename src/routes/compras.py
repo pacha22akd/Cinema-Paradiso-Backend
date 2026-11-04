@@ -1,9 +1,15 @@
+<<<<<<< HEAD
 from flask import Blueprint, request, jsonify
 from src.services.compras import realizar_proceso_compra
+=======
+from flask import Blueprint, jsonify
+from src.services import compras
+>>>>>>> feature/endpoints-POST-usuarios-GET-compras/id
 from src.utils.errores import devolver_error
 
 compras_bp = Blueprint('compras', __name__)
 
+<<<<<<< HEAD
 @compras_bp.route('/compras', methods=['POST'])
 def crear_compra():
     try:
@@ -29,3 +35,17 @@ def crear_compra():
 
     except Exception as e:
         return devolver_error(f"Error inesperado al procesar la compra: {str(e)}", 500)
+=======
+@compras_bp.route("/compras/<int:id>", methods=["GET"])
+def get_compra(id):
+    try:
+        resultado = compras.obtener_compra(id)
+
+        if "error" in resultado:
+            return devolver_error(resultado["error"], resultado["status"])
+
+        return jsonify(resultado), 200
+
+    except Exception as e:
+        return devolver_error(str(e), 500)
+>>>>>>> feature/endpoints-POST-usuarios-GET-compras/id
