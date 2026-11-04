@@ -2,8 +2,14 @@ import os
 import requests
 from dotenv import load_dotenv
 import src.repositories.peliculas as peliculas_rep
-
+from src.repositories.peliculas import obtener_pelicula_por_id, obtener_peliculas_cartelera
 load_dotenv()
+
+def buscar_pelicula_por_id(pelicula_id):
+    return obtener_pelicula_por_id(pelicula_id)
+
+def listar_peliculas_cartelera(genero=None, titulo=None):
+    return obtener_peliculas_cartelera(genero, titulo)
 
 def listar_peliculas(titulo=None, genero=None) -> list:
 
