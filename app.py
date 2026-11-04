@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 from dotenv import load_dotenv
 from flask import Flask
@@ -32,14 +31,6 @@ app.register_blueprint(peliculas_bp)
 app.register_blueprint(estadisticas_bp)
 app.register_blueprint(funciones_bp)
 app.register_blueprint(compras_bp)
-=======
-from flask import Flask
-from src.routes.peliculas import peliculas_bp
-
-app = Flask(__name__)
-
-app.register_blueprint(peliculas_bp)
->>>>>>> feature/get-admin-peliculas-externas
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

@@ -2,6 +2,7 @@ from src.repositories import peliculas as periculas_rep
 import os
 import requests
 from dotenv import load_dotenv
+import src.repositories.peliculas as peliculas_repository
 
 load_dotenv()
 
@@ -74,5 +75,13 @@ def buscar_pelicula_externa(titulo, anio=None):
     for campo, valor in pelicula.items():
         if valor == "N/A":
             pelicula[campo] = None
+
+    return pelicula
+
+def modificar_pelicula(id_pelicula, datos):
+
+    pelicula = peliculas_repository.actualizar_pelicula(
+        id_pelicula, datos
+    )
 
     return pelicula
