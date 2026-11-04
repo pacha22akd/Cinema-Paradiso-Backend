@@ -1,15 +1,10 @@
-<<<<<<< HEAD
-from flask import Blueprint, request, jsonify
-from src.services.compras import realizar_proceso_compra
-=======
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from src.services import compras
->>>>>>> feature/endpoints-POST-usuarios-GET-compras/id
 from src.utils.errores import devolver_error
+from src.utils.auth import requiere_auth
 
-compras_bp = Blueprint('compras', __name__)
+compras_bp = Blueprint('compras', name)
 
-<<<<<<< HEAD
 @compras_bp.route('/compras', methods=['POST'])
 def crear_compra():
     try:
@@ -21,10 +16,10 @@ def crear_compra():
         funcion_id = datos.get('funcion_id')
         butaca_ids = datos.get('butaca_ids')
 
-        resultado = realizar_proceso_compra(usuario_id, funcion_id, butaca_ids)
+        resultado = compras.realizar_proceso_compra(usuario_id, funcion_id, butaca_ids)
 
         if "error" in resultado:
-            return devolver_error(resultado["error"], resultado["status"])  
+            return devolver_error(resultado["error"], resultado["status"])
 
         return jsonify({
             "mensaje": "Compra realizada con éxito",
@@ -35,7 +30,7 @@ def crear_compra():
 
     except Exception as e:
         return devolver_error(f"Error inesperado al procesar la compra: {str(e)}", 500)
-=======
+
 @compras_bp.route("/compras/<int:id>", methods=["GET"])
 def get_compra(id):
     try:
@@ -48,4 +43,31 @@ def get_compra(id):
 
     except Exception as e:
         return devolver_error(str(e), 500)
->>>>>>> feature/endpoints-POST-usuarios-GET-compras/id
+
+#----------------------
+@compras_bp.route('/compras', methods=['GET'])
+@requiere_auth
+def listar_compras():
+    try:
+        resultado = compras.listar_compras_usuario(
+            usuario_id  = g.usuario_id,     # 👈 viene del token
+            estado      = request.args.get("estado"),
+            fecha_desde = request.args.get("fecha_desde"),
+            fecha_hasta = request.args.get("fecha_hasta"),
+            page        = request.args.get("page"),
+            per_page    = request.args.get("per_page"),
+        )
+
+        return jsonify({
+            "mensaje": "Historial de compras obtenido exitosamente",
+            **resultado,
+        }), 200
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+
+    except PermissionError as e:
+        return devolver_error(str(e), 401)
+
+    except Exception as e:  # noqa: BLE001
+        return devolver_error(f"Error interno del servidor: {str(e)}", 500)

@@ -1,13 +1,14 @@
-<<<<<<< HEAD
 from flask import Blueprint, request, jsonify, g
 
 import src.validators.usuarios as usuarios_validator
 import src.services.usuarios as usuarios_service
 import src.utils.errores as errores
 import src.utils.auth as auth
+from src.services import usuarios 
+from src.utils.errores import devolver_error
 
 
-usuarios_bp = Blueprint("usuarios", __name__)
+usuarios_bp = Blueprint("usuarios", name)
 
 
 @usuarios_bp.route("/usuarios/perfil", methods=["PATCH"])
@@ -38,12 +39,7 @@ def modificar_perfil():
 
     except Exception:
         return errores.devolver_error("No se pudo modificar el perfil", 500)
-=======
-from flask import Blueprint, request, jsonify
-from src.services import usuarios 
-from src.utils.errores import devolver_error
 
-usuarios_bp = Blueprint('usuarios', __name__)
 
 @usuarios_bp.route("/usuarios", methods=["POST"])
 def post_usuario():
@@ -65,4 +61,28 @@ def post_usuario():
 
     except Exception as e:
         return devolver_error(f"Error inesperado: {str(e)}", 500)
->>>>>>> feature/endpoints-POST-usuarios-GET-compras/id
+
+#-----------------------------------
+
+@usuarios_bp.route('/usuarios/perfil', methods=['GET'])
+@auth.requiere_auth
+def get_perfil():
+    try:
+        resultado = usuarios_service.obtener_perfil_usuario(g.usuario_id)
+
+        return jsonify({
+            "mensaje": "Perfil obtenido exitosamente",
+            **resultado
+        }), 200
+
+    except PermissionError as e:
+        return errores.devolver_error(str(e), 401)
+    except LookupError as e:
+        return errores.devolver_error(str(e), 404)
+    except Exception:
+        current_app.logger.exception("Error al obtener el perfil del usuario")
+        return errores.devolver_error(
+            "Ocurrió un error inesperado al obtener el perfil",
+            500
+        )
+

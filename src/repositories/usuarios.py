@@ -84,3 +84,54 @@ def crear_usuario(nombre, apellido, email, password_hash, telefono, rol_id):
     conn.close()
     
     return nuevo_id
+
+#-----------------------------------------------
+def obtener_perfil_usuario(usuario_id):
+    sql = text("""
+        SELECT u.id, u.nombre, u.apellido, u.email, u.telefono,
+               u.fecha_registro, u.activo, r.nombre AS rol
+        FROM usuarios u
+        JOIN roles r ON u.rol_id = r.id
+        WHERE u.id = :usuario_id AND u.activo = TRUE
+    """)
+    with db.connect() as conn:
+        return conn.execute(sql, {"usuario_id": usuario_id}).fetchone()
+
+
+def obtener_usuario_por_email(email):
+    sql = text("""
+        SELECT u.id, u.nombre, u.apellido, u.email, u.password_hash,
+               u.telefono, u.activo, r.nombre AS rol
+        FROM usuarios u
+        JOIN roles r ON u.rol_id = r.id
+        WHERE u.email = :email
+    """)
+    with db.connect() as conn:
+        return conn.execute(sql, {"email": email}).fetchone()
+
+
+def obtener_resumen_consumos(usuario_id):
+    sql = text("""
+        SELECT COUNT(id) AS total_compras,
+               COALESCE(SUM(total), 0) AS total_gastado
+        FROM compras
+        WHERE usuario_id = :usuario_id
+          AND estado != 'cancelada'
+    """)
+    with db.connect() as conn:
+        return conn.execute(sql, {"usuario_id": usuario_id}).fetchone()
+
+
+def obtener_historial_peliculas(usuario_id):
+    sql = text("""
+        SELECT p.titulo, p.poster_url, f.fecha_hora_inicio,
+               c.estado AS estado_compra, c.codigo
+        FROM compras c
+        JOIN funciones f ON c.funcion_id = f.id
+        JOIN peliculas p ON f.pelicula_id = p.id
+        WHERE c.usuario_id = :usuario_id
+          AND c.estado IN ('pagada', 'usada')
+        ORDER BY f.fecha_hora_inicio DESC
+    """)
+    with db.connect() as conn:
+        return conn.execute(sql, {"usuario_id": usuario_id}).fetchall()
