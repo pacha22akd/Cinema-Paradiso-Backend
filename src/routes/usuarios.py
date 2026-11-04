@@ -1,10 +1,11 @@
-<<<<<<< HEAD
 from flask import Blueprint, request, jsonify, g
 
 import src.validators.usuarios as usuarios_validator
 import src.services.usuarios as usuarios_service
 import src.utils.errores as errores
 import src.utils.auth as auth
+from src.services import usuarios 
+from src.utils.errores import devolver_error
 
 
 usuarios_bp = Blueprint("usuarios", __name__)
@@ -38,10 +39,7 @@ def modificar_perfil():
 
     except Exception:
         return errores.devolver_error("No se pudo modificar el perfil", 500)
-=======
-from flask import Blueprint, request, jsonify
-from src.services import usuarios 
-from src.utils.errores import devolver_error
+
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
@@ -65,4 +63,3 @@ def post_usuario():
 
     except Exception as e:
         return devolver_error(f"Error inesperado: {str(e)}", 500)
->>>>>>> feature/endpoints-POST-usuarios-GET-compras/id
