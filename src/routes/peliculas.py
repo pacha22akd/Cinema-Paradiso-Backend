@@ -15,14 +15,36 @@ def consultar_peliculas():
     genero = request.args.get("genero")
 
     es_valido, titulo, genero, descripcion_error = peliculas_validator.validar_filtros_peliculas(titulo, genero, request.args)
+    if not es_valido:
+            return errores.devolver_error(descripcion_error, 400)
+    
+    try:
+        peliculas = peliculas_service.listar_peliculas(titulo, genero)
+    
+        return jsonify(peliculas), 200
+    except Exception:
+            return errores.devolver_error("No se pudieron consultar las peliculas", 500)
+
+
+    
+@peliculas_bp.route("/admin/peliculas/externas", methods=["GET"])
+def consultar_pelicula_externa():
+
+    titulo = request.args.get("titulo")
+    anio = request.args.get("anio")
+
+    es_valido, titulo, anio, descripcion_error = peliculas_validator.validar_busqueda_externa(titulo, anio, request.args)
 
     if not es_valido:
         return errores.devolver_error(descripcion_error, 400)
 
     try:
-        peliculas = peliculas_service.listar_peliculas(titulo, genero)
+        pelicula = peliculas_service.buscar_pelicula_externa(titulo, anio)
 
-        return jsonify(peliculas), 200
+        if pelicula is None:
+            return errores.devolver_error("No se encontro la pelicula en OMDb", 404)
+
+        return jsonify(pelicula), 200
 
     except Exception:
-        return errores.devolver_error("No se pudieron consultar las peliculas", 500)
+        return errores.devolver_error("No se pudo consultar OMDb", 500)
