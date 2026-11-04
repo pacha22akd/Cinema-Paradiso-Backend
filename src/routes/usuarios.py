@@ -41,8 +41,6 @@ def modificar_perfil():
         return errores.devolver_error("No se pudo modificar el perfil", 500)
 
 
-usuarios_bp = Blueprint('usuarios', __name__)
-
 @usuarios_bp.route("/usuarios", methods=["POST"])
 def post_usuario():
     datos = request.get_json()
