@@ -60,12 +60,10 @@ def modificar_pelicula(id_pelicula):
     datos = request.get_json(silent=True)
 
     es_valido, pelicula, descripcion_error = peliculas_validator.validar_modificacion_pelicula(datos)
-
     if not es_valido:
-        return errores.devolver_error(descripcion_error, 400)
-
+            return errores.devolver_error(descripcion_error, 400)
+    
     try:
-        
         pelicula_actualizada = peliculas_service.modificar_pelicula(
             id_pelicula, pelicula
         )
@@ -77,3 +75,23 @@ def modificar_pelicula(id_pelicula):
 
     except Exception:
         return errores.devolver_error("No se pudo modificar la pelicula", 500)
+
+
+
+@peliculas_bp.route("/admin/peliculas", methods=["POST"])
+def registrar_pelicula():
+
+    datos = request.get_json(silent=True)
+
+    es_valido, pelicula, descripcion_error = peliculas_validator.validar_alta_pelicula(datos)
+
+    if not es_valido:
+        return errores.devolver_error(descripcion_error, 400)
+
+    try:
+        pelicula_creada = peliculas_service.crear_pelicula(pelicula)
+
+        return jsonify(pelicula_creada), 201
+
+    except Exception:
+        return errores.devolver_error("No se pudo registrar la pelicula", 500)

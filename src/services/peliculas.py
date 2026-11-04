@@ -1,14 +1,13 @@
-from src.repositories import peliculas as periculas_rep
 import os
 import requests
 from dotenv import load_dotenv
-import src.repositories.peliculas as peliculas_repository
+import src.repositories.peliculas as peliculas_rep
 
 load_dotenv()
 
 def listar_peliculas(titulo=None, genero=None) -> list:
 
-    peliculas = periculas_rep.obtener_peliculas(titulo, genero)
+    peliculas = peliculas_rep.obtener_peliculas(titulo, genero)
 
     return peliculas
 
@@ -80,8 +79,17 @@ def buscar_pelicula_externa(titulo, anio=None):
 
 def modificar_pelicula(id_pelicula, datos):
 
-    pelicula = peliculas_repository.actualizar_pelicula(
+    pelicula = peliculas_rep.actualizar_pelicula(
         id_pelicula, datos
     )
+
+    return pelicula
+
+def crear_pelicula(datos):
+
+    id_pelicula = peliculas_rep.insertar_pelicula(datos)
+
+    pelicula = datos.copy()
+    pelicula["id"] = id_pelicula
 
     return pelicula

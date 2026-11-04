@@ -58,13 +58,11 @@ def actualizar_pelicula(id_pelicula, datos):
 
     query = "UPDATE peliculas SET " + ", ".join(condiciones)
     query += " WHERE id = :id_pelicula"
-
     conn = db.connect()
-
+    
     try:
-        
         consulta = "SELECT id FROM peliculas WHERE id = :id_pelicula"
-
+         
         resultado = conn.execute(
             text(consulta),
             {"id_pelicula": id_pelicula}
@@ -87,6 +85,48 @@ def actualizar_pelicula(id_pelicula, datos):
         conn.commit()
 
         return dict(fila._mapping)
+    
+    except Exception:
+            conn.rollback()
+            raise
+    
+    finally:
+        conn.close()
+
+
+def insertar_pelicula(datos):
+
+    query = """INSERT INTO peliculas (
+                   api_id,
+                   titulo,
+                   sinopsis,
+                   poster_url,
+                   duracion_min,
+                   clasificacion,
+                   genero,
+                   anio_estreno
+               )
+               VALUES (
+                   :api_id,
+                   :titulo,
+                   :sinopsis,
+                   :poster_url,
+                   :duracion_min,
+                   :clasificacion,
+                   :genero,
+                   :anio_estreno
+               )"""
+
+    conn = db.connect()
+
+    try:
+        resultado = conn.execute(text(query), datos)
+
+        id_pelicula = resultado.lastrowid
+
+        conn.commit()
+
+        return id_pelicula
 
     except Exception:
         conn.rollback()
