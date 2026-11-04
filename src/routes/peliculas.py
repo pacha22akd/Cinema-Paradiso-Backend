@@ -51,14 +51,12 @@ def consultar_pelicula_externa():
           
 @peliculas_bp.route("/admin/peliculas/<int:id_pelicula>", methods=["PATCH"])
 def modificar_pelicula(id_pelicula):
-
     id_valido, descripcion_error = peliculas_validator.validar_id_pelicula(id_pelicula)
-
+    
     if not id_valido:
         return errores.devolver_error(descripcion_error, 400)
-
     datos = request.get_json(silent=True)
-
+    
     es_valido, pelicula, descripcion_error = peliculas_validator.validar_modificacion_pelicula(datos)
     if not es_valido:
             return errores.devolver_error(descripcion_error, 400)
@@ -75,9 +73,9 @@ def modificar_pelicula(id_pelicula):
 
     except Exception:
         return errores.devolver_error("No se pudo modificar la pelicula", 500)
-
-
-
+    
+    
+    
 @peliculas_bp.route("/admin/peliculas", methods=["POST"])
 def registrar_pelicula():
 
@@ -95,3 +93,27 @@ def registrar_pelicula():
 
     except Exception:
         return errores.devolver_error("No se pudo registrar la pelicula", 500)
+
+
+    
+@peliculas_bp.route("/admin/peliculas/<int:id_pelicula>", methods=["DELETE"])
+def eliminar_pelicula(id_pelicula):
+
+    id_valido, descripcion_error = peliculas_validator.validar_id_pelicula(id_pelicula)
+
+    if not id_valido:
+        return errores.devolver_error(descripcion_error, 400)
+
+    try:
+        resultado = peliculas_service.borrar_pelicula(id_pelicula)
+
+        if resultado == "no_existe":
+            return errores.devolver_error("La pelicula no existe", 404)
+
+        if resultado == "con_funciones_asociadas":
+            return errores.devolver_error("La pelicula tiene funciones asociadas y no puede eliminarse", 409)
+
+        return jsonify({"mensaje": "La pelicula fue eliminada correctamente"}), 200
+
+    except Exception:
+        return errores.devolver_error("No se pudo eliminar la pelicula", 500)

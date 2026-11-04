@@ -93,3 +93,10 @@ def crear_pelicula(datos):
     pelicula["id"] = id_pelicula
 
     return pelicula
+
+
+def borrar_pelicula(id_pelicula):
+
+    resultado = peliculas_rep.eliminar_pelicula(id_pelicula)
+
+    return resultado
