@@ -1,19 +1,19 @@
 from flask import Blueprint, request, jsonify
-
+from src.utils.errores import devolver_error
+import src.validators.estadisticas as estadisticas_validator
+import src.services.estadisticas as estadisticas_service
+import src.utils.errores as errores
+from src.utils.auth import requiere_rol
 from src.services.estadisticas import (
     listar_ocupacion_funciones,
     listar_ocupacion_peliculas,
     listar_franjas_horarias
 )
-from src.utils.errores import devolver_error
-
-import src.validators.estadisticas as estadisticas_validator
-import src.services.estadisticas as estadisticas_service
-import src.utils.errores as errores
 
 estadisticas_bp = Blueprint('estadisticas', __name__)
 
 @estadisticas_bp.route('/admin/estadisticas/ocupacion/funciones', methods=['GET'])
+@requiere_rol("administrador")
 def obtener_ocupacion_por_funciones():
     try:
         datos = listar_ocupacion_funciones()
@@ -26,6 +26,7 @@ def obtener_ocupacion_por_funciones():
         return devolver_error(f"Error inesperado al obtener estadísticas de funciones: {str(e)}", 500)
 
 @estadisticas_bp.route('/admin/estadisticas/ocupacion/peliculas', methods=['GET'])
+@requiere_rol("administrador")
 def obtener_ocupacion_por_peliculas():
     try:
         datos = listar_ocupacion_peliculas()
@@ -38,6 +39,7 @@ def obtener_ocupacion_por_peliculas():
         return devolver_error(f"Error inesperado al obtener estadísticas por película: {str(e)}", 500)
 
 @estadisticas_bp.route('/admin/estadisticas/franjas_horarias', methods=['GET'])
+@requiere_rol("administrador")
 def obtener_franjas_horarias():
     try:
         datos = listar_franjas_horarias()
@@ -51,6 +53,7 @@ def obtener_franjas_horarias():
 
 
 @estadisticas_bp.route("/admin/estadisticas/ventas_genero", methods=["GET"])
+@requiere_rol("administrador")
 def obtener_ventas_genero():
 
     fecha_desde = request.args.get("fecha_desde")

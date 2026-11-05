@@ -49,7 +49,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
         print(f"Error en la transacción de compra: {e}")
         return None
     
-def obtener_compra_por_id(id_compra):
+def obtener_compra_por_id(id_compra, usuario_id):
     query_compra = """
         SELECT c.id, c.codigo, c.total, c.estado, c.fecha_compra, c.numero_factura,
                f.id AS funcion_id, f.fecha_hora_inicio, f.fecha_hora_fin,
@@ -59,7 +59,7 @@ def obtener_compra_por_id(id_compra):
         JOIN peliculas p ON f.pelicula_id = p.id
         JOIN salas s ON f.sala_id = s.id
         JOIN locales l ON s.local_id = l.id
-        WHERE c.id = :id
+        WHERE c.id = :id AND c.usuario_id = :usuario_id
     """
     
     query_entradas = """
@@ -82,7 +82,7 @@ def obtener_compra_por_id(id_compra):
 
     conn = db.engine.connect()
     
-    resultado_compra = conn.execute(text(query_compra), valores).fetchone()
+    resultado_compra = conn.execute(text(query_compra), {"id": id_compra, "usuario_id": usuario_id}).fetchone()
     if not resultado_compra:
         conn.close()
         return None

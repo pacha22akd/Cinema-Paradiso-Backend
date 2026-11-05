@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from src.repositories.compras import cancelar_compra_en_bd
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
@@ -48,8 +48,8 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     return resultado
 
 
-def obtener_compra(id_compra):
-    compra = compras.obtener_compra_por_id(id_compra)
+def obtener_compra(id_compra, usuario_id):
+    compra = compras.obtener_compra_por_id(id_compra, usuario_id)
 
     if compra is None:
         return {"error": "No existe la compra buscada", "status": 404}

@@ -8,7 +8,7 @@ from src.services import usuarios
 from src.utils.errores import devolver_error
 
 
-usuarios_bp = Blueprint("usuarios", name)
+usuarios_bp = Blueprint("usuarios", __name__)
 
 
 @usuarios_bp.route("/usuarios/perfil", methods=["PATCH"])

@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify
 import src.services.salas as salas_service
 from src.utils.errores import devolver_error
+from src.utils.auth import requiere_rol
 
 salas_bp = Blueprint('salas', __name__)
 
 @salas_bp.route('/admin/salas', methods=['GET'])
+@requiere_rol("administrador")
 def listar_salas():
     try:
         salas = salas_service.obtener_salas()
