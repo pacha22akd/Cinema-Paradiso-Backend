@@ -1,5 +1,5 @@
 import datetime
-
+from src.repositories.compras import cancelar_compra_en_bd
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
 from src.validators.compras import validar_datos_compra
@@ -153,3 +153,17 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
             "total_pages": (total + per_page - 1) // per_page if per_page else 0,
         },
     }
+
+
+def cancelar_compra(id_compra, id_usuario):
+
+    resultado = cancelar_compra_en_bd(id_compra, id_usuario)
+
+    if resultado == "no_existe":
+        return {"error": "Compra no encontrada"}, 404
+
+    if resultado == "no_cancelable":
+        return {"error": "La compra no se puede cancelar"}, 409
+
+    return {"mensaje": "Compra cancelada correctamente"}, 200
+

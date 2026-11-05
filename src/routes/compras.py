@@ -1,9 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 from src.services import compras
 from src.utils.errores import devolver_error
 from src.utils.auth import requiere_auth
+from src.validators.compras import validar_id_compra
 
-compras_bp = Blueprint('compras', name)
+compras_bp = Blueprint('compras', __name__)
 
 @compras_bp.route('/compras', methods=['POST'])
 def crear_compra():
@@ -72,3 +73,17 @@ def listar_compras():
 
     except Exception as e:  # noqa: BLE001
         return devolver_error(f"Error interno del servidor: {str(e)}", 500)
+
+
+
+@compras_bp.route("/compras/<int:id_compra>/cancelar", methods=["PATCH"])
+def cancelar_compra_por_id(id_compra):
+
+    valido, error = validar_id_compra(id_compra)
+
+    if not valido:
+        return jsonify({"error": error}), 400
+
+    return jsonify({
+        "error": "Falta integrar la autenticacion del usuario"
+    }), 501
