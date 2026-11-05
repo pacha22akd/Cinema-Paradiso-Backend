@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services import servicios_services
+from services import servicios
 from src.utils.errores import devolver_error
 
 servicios_bp = Blueprint("servicios", __name__)
@@ -8,7 +8,7 @@ servicios_bp = Blueprint("servicios", __name__)
 def obtener_servicios():
 
     try:
-        servicios = servicios_services.listar_servicios()
+        servicios = servicios.listar_servicios()
         if not servicios:
             return devolver_error("No hay servicios actualmente", 404)
 
@@ -24,7 +24,7 @@ def nuevo_servicio():
     datos = request.get_json()
 
     try:
-        servicio = servicios_services.dar_de_alta_servicio(
+        servicio = servicios.dar_de_alta_servicio(
             datos.get("nombre"),
             datos.get("descripcion"),
             datos.get("categoria"),
@@ -46,7 +46,7 @@ def patch_servicio(id):
     datos = request.get_json()
 
     try:
-        existe = servicios_services.alterar_servicio(
+        existe = servicios.alterar_servicio(
         id,
         datos.get("nombre"),
         datos.get("descripcion"),
@@ -69,7 +69,7 @@ def patch_servicio(id):
 def delete_servicio(id):
 
     try:
-        existe = servicios_services.quitar_servicio(id)
+        existe = servicios.quitar_servicio(id)
 
         if existe == False:
             return devolver_error("No existe el servicio buscado.", 404)
