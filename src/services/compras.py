@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from src.repositories.compras import cancelar_compra_en_bd
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
