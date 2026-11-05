@@ -126,3 +126,57 @@ def obtener_compra_por_id(id_compra):
 
     conn.close()
     return compra
+#-------------------------------------------------
+def obtener_compras_usuario(usuario_id, filtros, offset, limit):
+    """
+    Devuelve (filas, total) con las compras del usuario autenticado.
+    filtros: dict con claves opcionales ya validadas por el service:
+        estado, fecha_desde, fecha_hasta
+    """
+    condiciones = ["c.usuario_id = :usuario_id"]
+    params = {"usuario_id": usuario_id}
+
+    if filtros.get("estado"):
+        condiciones.append("c.estado = :estado")
+        params["estado"] = filtros["estado"]
+
+    if filtros.get("fecha_desde"):
+        condiciones.append("c.fecha_compra >= :fecha_desde")
+        params["fecha_desde"] = filtros["fecha_desde"]
+
+    if filtros.get("fecha_hasta"):
+        condiciones.append("c.fecha_compra <= :fecha_hasta")
+        params["fecha_hasta"] = filtros["fecha_hasta"]
+
+    where = "WHERE " + " AND ".join(condiciones)
+
+    sql_count = text(f"SELECT COUNT(*) AS total FROM compras c {where}")
+    
+    sql = text(f"""
+        SELECT c.id, c.codigo, c.total, c.estado, c.fecha_compra,
+               f.fecha_hora_inicio,
+               p.titulo AS pelicula_titulo, p.poster_url,
+               s.nombre AS sala_nombre, l.nombre AS local_nombre,
+               (SELECT COUNT(*) FROM entradas e
+                 WHERE e.compra_id = c.id) AS cantidad_entradas,
+               (SELECT COUNT(*) FROM compra_servicios cs
+                 WHERE cs.compra_id = c.id) AS cantidad_servicios
+        FROM compras c
+        JOIN funciones f ON c.funcion_id = f.id
+        JOIN peliculas p ON f.pelicula_id = p.id
+        JOIN salas     s ON f.sala_id    = s.id
+        JOIN locales   l ON s.local_id   = l.id
+        {where}
+        ORDER BY c.fecha_compra DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    
+    params["limit"] = limit
+    params["offset"] = offset
+
+    # Usamos un solo bloque connect() para hacer las dos consultas
+    with db.connect() as conn:
+        total = conn.execute(sql_count, params).scalar()
+        filas = conn.execute(sql, params).fetchall()
+
+    return filas, total

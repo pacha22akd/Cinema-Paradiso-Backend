@@ -52,3 +52,51 @@ def registrar_usuario(datos):
         'telefono': telefono,
         'rol_id': rol_id
     }
+
+#--------------------------------------
+def obtener_perfil_usuario(usuario_id):
+    if not usuario_id:
+        raise PermissionError("Usuario no autenticado")
+
+    perfil_db = usuarios.obtener_perfil_usuario(usuario_id)
+    if not perfil_db:
+        raise LookupError("Usuario no encontrado")
+
+    consumos_db = usuarios.obtener_resumen_consumos(usuario_id)
+    historial_db = usuarios.obtener_historial_peliculas(usuario_id)
+
+    fecha_reg = (
+        perfil_db.fecha_registro.strftime("%Y-%m-%d")
+        if perfil_db.fecha_registro else None
+    )
+
+    historial = []
+    for h in historial_db:
+        fecha_f = (
+            h.fecha_hora_inicio.strftime("%Y-%m-%d %H:%M")
+            if h.fecha_hora_inicio else None
+        )
+        historial.append({
+            "codigo_compra": h.codigo,
+            "pelicula": h.titulo,
+            "poster": h.poster_url,
+            "fecha_funcion": fecha_f,
+            "estado": h.estado_compra
+        })
+
+    return {
+        "datos_personales": {
+            "id": perfil_db.id,
+            "nombre": perfil_db.nombre,
+            "apellido": perfil_db.apellido,
+            "email": perfil_db.email,
+            "telefono": perfil_db.telefono,
+            "rol": perfil_db.rol,
+            "fecha_registro": fecha_reg
+        },
+        "consumos": {
+            "total_compras": consumos_db.total_compras,
+            "total_gastado": float(consumos_db.total_gastado)
+        },
+        "historial_peliculas": historial
+    }

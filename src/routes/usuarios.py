@@ -8,7 +8,7 @@ from src.services import usuarios
 from src.utils.errores import devolver_error
 
 
-usuarios_bp = Blueprint("usuarios", __name__)
+usuarios_bp = Blueprint("usuarios", name)
 
 
 @usuarios_bp.route("/usuarios/perfil", methods=["PATCH"])
@@ -61,3 +61,28 @@ def post_usuario():
 
     except Exception as e:
         return devolver_error(f"Error inesperado: {str(e)}", 500)
+
+#-----------------------------------
+
+@usuarios_bp.route('/usuarios/perfil', methods=['GET'])
+@auth.requiere_auth
+def get_perfil():
+    try:
+        resultado = usuarios_service.obtener_perfil_usuario(g.usuario_id)
+
+        return jsonify({
+            "mensaje": "Perfil obtenido exitosamente",
+            **resultado
+        }), 200
+
+    except PermissionError as e:
+        return errores.devolver_error(str(e), 401)
+    except LookupError as e:
+        return errores.devolver_error(str(e), 404)
+    except Exception:
+        current_app.logger.exception("Error al obtener el perfil del usuario")
+        return errores.devolver_error(
+            "Ocurrió un error inesperado al obtener el perfil",
+            500
+        )
+
