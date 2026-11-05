@@ -5,6 +5,7 @@ from src.utils.errores import devolver_error
 import src.validators.peliculas as peliculas_validator
 import src.services.peliculas as peliculas_service
 import src.utils.errores as errores 
+from src.utils.auth import requiere_rol
 
 peliculas_bp = Blueprint('peliculas', __name__)
 
@@ -25,6 +26,7 @@ def get_peliculas():
         return devolver_error(f"Error inesperado al obtener la cartelera: {str(e)}", 500)  
 
 @peliculas_bp.route('/admin/peliculas/<int:pelicula_id>', methods=['GET'])
+@requiere_rol("administrador")
 def obtener_pelicula(pelicula_id):
     try:
         pelicula = buscar_pelicula_por_id(pelicula_id)
@@ -55,6 +57,7 @@ def get_funciones_pelicula(pelicula_id):
 
 
 @peliculas_bp.route("/admin/peliculas", methods=["GET"])
+@requiere_rol("administrador")
 def consultar_peliculas():
 
     titulo = request.args.get("titulo")
@@ -74,6 +77,7 @@ def consultar_peliculas():
 
     
 @peliculas_bp.route("/admin/peliculas/externas", methods=["GET"])
+@requiere_rol("administrador")
 def consultar_pelicula_externa():
 
     titulo = request.args.get("titulo")
@@ -96,6 +100,7 @@ def consultar_pelicula_externa():
 
           
 @peliculas_bp.route("/admin/peliculas/<int:id_pelicula>", methods=["PATCH"])
+@requiere_rol("administrador")
 def modificar_pelicula(id_pelicula):
     id_valido, descripcion_error = peliculas_validator.validar_id_pelicula(id_pelicula)
     
@@ -121,8 +126,8 @@ def modificar_pelicula(id_pelicula):
         return errores.devolver_error("No se pudo modificar la pelicula", 500)
     
     
-    
 @peliculas_bp.route("/admin/peliculas", methods=["POST"])
+@requiere_rol("administrador")
 def registrar_pelicula():
 
     datos = request.get_json(silent=True)
@@ -143,6 +148,7 @@ def registrar_pelicula():
 
     
 @peliculas_bp.route("/admin/peliculas/<int:id_pelicula>", methods=["DELETE"])
+@requiere_rol("administrador")
 def eliminar_pelicula(id_pelicula):
 
     id_valido, descripcion_error = peliculas_validator.validar_id_pelicula(id_pelicula)
