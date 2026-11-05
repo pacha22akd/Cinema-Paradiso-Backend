@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services import entrada_services
+from services import entradas
 from src.utils.errores import devolver_error
 
 entradas_bp = Blueprint("entradas", __name__)
@@ -10,7 +10,7 @@ def post_validar_qr():
     datos = request.get_json()
 
     try:
-        resultado = entrada_services.validar_qr(
+        resultado = entradas.validar_qr(
             datos.get("qr_codigo"),
             datos.get("funcion_id"),
         )
