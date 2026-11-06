@@ -73,3 +73,15 @@ def obtener_ventas_genero():
 
     except Exception:
         return errores.devolver_error("No se pudieron obtener las ventas por genero", 500)
+
+
+@estadisticas_bp.route("/admin/estadisticas/cancelaciones", methods=["GET"])
+@requiere_rol("administrador")
+def get_cancelaciones():
+
+    try:
+        resultado = estadisticas_service.consultar_cancelaciones()
+        return jsonify(resultado), 200
+
+    except Exception as e:
+        return devolver_error(str(e), 500)

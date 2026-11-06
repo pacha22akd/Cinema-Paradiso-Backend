@@ -173,3 +173,20 @@ def obtener_ventas_genero(fecha_desde=None, fecha_hasta=None):
 
     finally:
         conn.close()
+
+        
+def obtener_cancelaciones():
+
+    query = """ SELECT motivo_cancelacion AS motivo, COUNT(*) AS cantidad FROM compras WHERE estado = 'cancelada' GROUP BY motivo_cancelacion """
+
+    conn = db.connect()
+    resultado = conn.execute(text(query))
+
+    motivos = []
+    for fila in resultado:
+        motivo = {"motivo": fila.motivo, "cantidad": fila.cantidad}
+        motivos.append(motivo)
+
+    conn.close()
+
+    return motivos
