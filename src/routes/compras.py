@@ -1,92 +1,36 @@
-from flask import Blueprint, jsonify, request, g
-from src.services import compras
-from src.utils.errores import devolver_error
+from flask import Blueprint, request
 from src.utils.auth import requiere_auth
-from src.validators.compras import validar_id_compra
+from src.utils.errores import devolver_error
+import src.services.compras as compras_service
 
-compras_bp = Blueprint('compras', __name__)
+compras_bp = Blueprint("compras", __name__)
 
-@compras_bp.route('/compras', methods=['POST'])
+@compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
 @requiere_auth
-def crear_compra():
+def post_servicio_a_compra(id):
+
     try:
-        datos = request.get_json(silent=True)
-        if not isinstance(datos, dict):
-            return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
+        datos = request.get_json()
 
-        usuario_id = g.usuario_id
-        funcion_id = datos.get('funcion_id')
-        butaca_ids = datos.get('butaca_ids')
-
-        resultado = compras.realizar_proceso_compra(usuario_id, funcion_id, butaca_ids)
-
-        if "error" in resultado:
-            return devolver_error(resultado["error"], resultado["status"])
-
-        return jsonify({
-            "mensaje": "Compra realizada con éxito",
-            "compra_id": resultado["compra_id"],
-            "codigo": resultado["codigo_compra"],
-            "monto_total": resultado["monto_total"]
-        }), 201
-
-    except Exception as e:
-        return devolver_error(f"Error inesperado al procesar la compra: {str(e)}", 500)
-    
-
-@compras_bp.route("/compras/<int:id>", methods=["GET"])
-@requiere_auth
-def get_compra(id):
-    try:
-        resultado = compras.obtener_compra(id, g.usuario_id)
-
-        if "error" in resultado:
-            return devolver_error(resultado["error"], resultado["status"])
-
-        return jsonify(resultado), 200
-
-    except Exception as e:
-        return devolver_error(str(e), 500)
-
-#----------------------
-@compras_bp.route('/compras', methods=['GET'])
-@requiere_auth
-def listar_compras():
-    try:
-        resultado = compras.listar_compras_usuario(
-            usuario_id  = g.usuario_id,     # 👈 viene del token
-            estado      = request.args.get("estado"),
-            fecha_desde = request.args.get("fecha_desde"),
-            fecha_hasta = request.args.get("fecha_hasta"),
-            page        = request.args.get("page"),
-            per_page    = request.args.get("per_page"),
+        return compras_services.agregar_servicio_a_compra(
+            id,
+            datos.get("servicio_id"),
+            datos.get("cantidad"),
         )
-
-        return jsonify({
-            "mensaje": "Historial de compras obtenido exitosamente",
-            **resultado,
-        }), 200
 
     except ValueError as e:
         return devolver_error(str(e), 400)
 
-    except PermissionError as e:
-        return devolver_error(str(e), 401)
-
-    except Exception as e:  # noqa: BLE001
-        return devolver_error(f"Error interno del servidor: {str(e)}", 500)
+    except Exception as e:
+        return devolver_error(str(e), 500)
 
 
-
-@compras_bp.route("/compras/<int:id_compra>/cancelar", methods=["PATCH"])
+@compras_bp.route("/compras/<int:id>/pagar", methods=["POST"])
 @requiere_auth
-def cancelar_compra_por_id(id_compra):
+def post_pagar_compra(id):
 
-    valido, error = validar_id_compra(id_compra)
+    try:
+        return compras_services.pagar_compra(id)
 
-    if not valido:
-        return jsonify({"error": error}), 400
-
-    return jsonify({
-        "error": "Falta integrar la autenticacion del usuario"
-    }), 501
+    except Exception as e:
+        return devolver_error(str(e), 500)
