@@ -14,7 +14,7 @@ def iniciar_sesion():
 
     respuesta, status = sesiones.iniciar_sesion(
         datos.get("email"),
-        datos.get("contraseña"),   
+        datos.get("password"),   
     )
 
     if status == 200:

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, current_app
 
 import src.validators.usuarios as usuarios_validator
 import src.services.usuarios as usuarios_service

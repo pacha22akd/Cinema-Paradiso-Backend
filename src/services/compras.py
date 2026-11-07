@@ -154,19 +154,19 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
     }
 
 def cancelar_compra(id_compra, id_usuario):
-  
-      resultado = cancelar_compra_en_bd(id_compra, id_usuario)
-  
-      if resultado == "no_existe":
-          return {"error": "Compra no encontrada"}, 404
-  
-      if resultado == "no_cancelable":
-          return {"error": "La compra no se puede cancelar"}, 409
-  
-      if resultado == "fuera_de_plazo":
-          return {"error": "Solo se puede cancelar hasta 2 horas antes de la función"}, 409
-  
-      return {"mensaje": "Compra cancelada correctamente"}, 200
+    
+    resultado = cancelar_compra_en_bd(id_compra, id_usuario)
+
+    if resultado == "no_existe":
+        return {"error": "Compra no encontrada"}, 404
+
+    if resultado == "no_cancelable":
+        return {"error": "La compra no se puede cancelar"}, 409
+
+    if resultado == "fuera_de_plazo":
+        return {"error": "Solo se puede cancelar hasta 2 horas antes de la función"}, 409
+
+    return {"mensaje": "Compra cancelada correctamente"}, 200
 
 
 def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):

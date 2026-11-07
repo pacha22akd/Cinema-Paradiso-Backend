@@ -83,8 +83,9 @@ def cancelar_compra_por_id(id_compra):
     valido, error = validar_id_compra(id_compra)
     if not valido:
         return jsonify({"error": error}), 400
-
-    respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id)
+    datos = request.get_json()
+    motivo = datos.get("motivo")
+    respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id, motivo)
     return jsonify(respuesta), codigo
 
 @compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])

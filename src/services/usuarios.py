@@ -18,7 +18,7 @@ def registrar_usuario(datos):
 
     email = datos.get('email')
     if usuarios.obtener_usuario_por_email(email):
-        return {"error": "El email ya está registrado en el sistema", "status": 400}
+        return {"error": "El email ya está registrado en el sistema", "status": 409}
 
     rol_id = usuarios.obtener_rol_id_por_nombre('cliente')
     if not rol_id:

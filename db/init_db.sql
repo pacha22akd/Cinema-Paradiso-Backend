@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     apellido       VARCHAR(100) NOT NULL,
     email          VARCHAR(150) NOT NULL UNIQUE,
     password_hash  VARCHAR(255) NOT NULL,
-    telefono       VARCHAR(30),
+    telefono       VARCHAR(30), NOT NULL,
     rol_id         INT NOT NULL,
     activo         BOOLEAN NOT NULL DEFAULT TRUE,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -266,16 +266,16 @@ VALUES
 INSERT INTO funciones
     (pelicula_id, sala_id, fecha_hora_inicio, fecha_hora_fin, precio_base, estado)
 VALUES
-    (1, 1, '2026-11-02 18:00:00', '2026-11-02 21:00:00', 8500.00, 'programada'),
-    (2, 1, '2026-11-02 21:15:00', '2026-11-02 23:50:00', 8000.00, 'programada'),
-    (3, 2, '2026-11-03 17:00:00', '2026-11-03 20:20:00', 7500.00, 'programada'),
-    (4, 2, '2026-11-03 20:45:00', '2026-11-03 22:15:00', 7000.00, 'programada'),
-    (5, 3, '2026-11-03 18:30:00', '2026-11-03 20:30:00', 7000.00, 'programada'),
-    (6, 1, '2026-11-04 19:00:00', '2026-11-04 21:35:00', 9000.00, 'programada'),
+    (1, 1, '2026-12-03 18:00:00', '2026-12-03 21:00:00', 8500.00, 'programada'),
+    (2, 1, '2026-12-03 21:15:00', '2026-12-03 23:50:00', 8000.00, 'programada'),
+    (3, 2, '2026-12-04 17:00:00', '2026-12-04 20:20:00', 7500.00, 'programada'),
+    (4, 2, '2026-12-04 20:45:00', '2026-12-04 22:15:00', 7000.00, 'programada'),
+    (5, 3, '2026-12-05 18:30:00', '2026-12-05 20:30:00', 7000.00, 'programada'),
+    (6, 1, '2026-12-06 19:00:00', '2026-12-06 21:35:00', 9000.00, 'programada'),
     (1, 2, '2026-10-10 19:00:00', '2026-10-10 22:00:00', 6500.00, 'finalizada'),
     (5, 3, '2026-10-15 18:00:00', '2026-10-15 20:00:00', 6500.00, 'finalizada'),
     (2, 3, '2026-11-05 20:00:00', '2026-11-05 22:40:00', 8000.00, 'cancelada'),
-    (3, 4, '2026-11-06 17:30:00', '2026-11-06 20:50:00', 8000.00, 'programada');
+    (3, 4, '2026-12-07 17:30:00', '2026-12-07 20:50:00', 8000.00, 'programada');
 
 -- SERVICIOS: 6 registros
 INSERT INTO servicios (nombre, descripcion, categoria, precio, stock, imagen_url) VALUES

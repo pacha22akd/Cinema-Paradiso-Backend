@@ -12,7 +12,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
             # 1. Insertar la compra
             query_compra = text("""
                 INSERT INTO compras (usuario_id, funcion_id, codigo, total, estado)
-                VALUES (:usuario_id, :funcion_id, :codigo, :total, 'pagada')
+                VALUES (:usuario_id, :funcion_id, :codigo, :total, 'pendiente')
             """)
             resultado_compra = conn.execute(query_compra, {
                 "usuario_id": usuario_id,
@@ -25,7 +25,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
             # 2. Insertar las entradas asociadas
             query_entrada = text("""
                 INSERT INTO entradas (compra_id, funcion_id, butaca_id, precio, qr_codigo, estado)
-                VALUES (:compra_id, :funcion_id, :butaca_id, :precio, :qr_codigo, 'valida')
+                VALUES (:compra_id, :funcion_id, :butaca_id, :precio, :qr_codigo, 'pendiente')
             """)
             
             for b_id in butaca_ids:
@@ -184,28 +184,33 @@ def obtener_compras_usuario(usuario_id, filtros, offset, limit):
 ESTADOS_CANCELABLES = ("pendiente", "pagada")
 HORAS_LIMITE_CANCELACION = 2
 
-def cancelar_compra_en_bd(id_compra, id_usuario):
+def cancelar_compra_en_bd(id_compra, id_usuario, motivo):
     conn = db.connect()
 
     try:
         query = """
-            SELECT c.usuario_id,
-                   c.estado,
-                   (SELECT f.fecha_hora_inicio
-                      FROM funciones f
-                     WHERE f.id = c.funcion_id) AS fecha_hora_inicio,
-                   NOW() > DATE_SUB(
-                       (SELECT f.fecha_hora_inicio
-                          FROM funciones f
-                         WHERE f.id = c.funcion_id),
-                       INTERVAL :horas HOUR
-                   ) AS fuera_de_plazo
+            SELECT
+                c.usuario_id,
+                c.estado,
+                (
+                    SELECT f.fecha_hora_inicio
+                    FROM funciones f
+                    WHERE f.id = c.funcion_id
+                ) AS fecha_hora_inicio,
+                NOW() > DATE_SUB(
+                    (
+                        SELECT f.fecha_hora_inicio
+                        FROM funciones f
+                        WHERE f.id = c.funcion_id
+                    ),
+                    INTERVAL :horas HOUR
+                ) AS fuera_de_plazo
             FROM compras c
             WHERE c.id = :id_compra
             FOR UPDATE
         """
-        
-        valores = {"id_compra": id_compra}
+
+        valores = {"id_compra": id_compra, "motivo": motivo}
 
         resultado = conn.execute(
             text(query),
@@ -232,7 +237,8 @@ def cancelar_compra_en_bd(id_compra, id_usuario):
         query = """
             UPDATE compras
             SET estado = 'cancelada',
-                fecha_cancelacion = NOW()
+                fecha_cancelacion = NOW(),
+                motivo_cancelacion = :motivo
             WHERE id = :id_compra
         """
 
@@ -331,7 +337,7 @@ def agregar_servicio_a_compra(compra_id, servicio_id, cantidad):
 
 def pagar_compra(id, numero_factura):
 
-    compra_query = "UPDATE compras SET estado = 'pagada', numero_factura = :numero_factura WHERE id = :id"
+    compra_query = "UPDATE compras SET estado = 'pagada', numero_factura = :numero_factura WHERE id = :id AND estado = 'pendiente'"
     entradas_query = "UPDATE entradas SET estado = 'valida' WHERE compra_id = :id AND estado = 'pendiente'"
 
     valores = {"id": id, "numero_factura": numero_factura}

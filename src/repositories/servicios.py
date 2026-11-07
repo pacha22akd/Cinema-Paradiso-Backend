@@ -24,6 +24,34 @@ def obtener_servicios():
     conn.close()
 
     return servicios
+
+def obtener_servicio(id):
+
+    query = """SELECT * FROM servicios WHERE id = :id"""
+
+    valores = {"id": id}
+
+    conn = db.connect()
+    resultado = conn.execute(text(query), valores)
+
+    fila = resultado.fetchone()
+
+    conn.close()
+
+    if fila is None:
+        return None
+
+    servicio = {
+        "id": fila.id,
+        "nombre": fila.nombre,
+        "descripcion": fila.descripcion,
+        "categoria": fila.categoria,
+        "precio": fila.precio,
+        "stock": fila.stock,
+        "imagen_url": fila.imagen_url,
+    }
+
+    return servicio
     
 def obtener_servicios_adicionales(categoria):
 

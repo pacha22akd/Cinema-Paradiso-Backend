@@ -14,3 +14,4 @@ def obtener_locales():
         return devolver_error("Error al obtener locales", 500)
     
     return jsonify(locales), 200
+
