@@ -37,3 +37,6 @@ def alterar_servicio(id, nombre, descripcion, categoria, precio, stock, imagen_u
 
 def quitar_servicio(id):
     return servicios.eliminar_servicio(id)
+
+def listar_servicios_adicionales(categoria):
+    return servicios.obtener_servicios_adicionales(categoria)

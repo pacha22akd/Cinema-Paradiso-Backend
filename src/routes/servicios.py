@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services import servicios
 from src.utils.errores import devolver_error
+from src.util.auth import requiere_rol
 
 servicios_bp = Blueprint("servicios", __name__)
 
@@ -19,6 +20,7 @@ def obtener_servicios():
 
 
 @servicios_bp.route('/admin/servicios', methods = ['POST'])
+@requiere_rol("administrador")
 def nuevo_servicio():
 
     datos = request.get_json()
@@ -41,6 +43,7 @@ def nuevo_servicio():
         return devolver_error(str(e), 500)
 
 @servicios_bp.route('/admin/servicios/<int:id>', methods = ['PATCH'])
+@requiere_rol("administrador")
 def patch_servicio(id):
 
     datos = request.get_json()
@@ -66,6 +69,7 @@ def patch_servicio(id):
 
 
 @servicios_bp.route("/admin/servicios/<int:id>", methods=["DELETE"])
+@requiere_rol("administrador")
 def delete_servicio(id):
 
     try:
@@ -75,6 +79,17 @@ def delete_servicio(id):
             return devolver_error("No existe el servicio buscado.", 404)
 
         return jsonify({"message": "Servicio eliminado con éxito."}), 200
+
+
+
+@servicios_bp.route("/servicios", methods=["GET"])
+def get_servicios_adicionales():
+
+    categoria = request.args.get("categoria")
+
+    try:
+        servicios = servicios.listar_servicios_adicionales(categoria)
+        return jsonify(servicios), 200
 
     except Exception as e:
         return devolver_error(str(e), 500)
