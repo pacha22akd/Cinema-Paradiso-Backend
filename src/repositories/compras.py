@@ -67,7 +67,7 @@ def obtener_compra_por_id(id_compra, usuario_id):
     """
     
     query_entradas = """
-        SELECT e.id, e.precio, e.qr_codigo, e.estado,
+        SELECT e.id, e.precio, e.estado,
                b.fila, b.numero, b.tipo AS tipo_butaca
         FROM entradas e
         JOIN butacas b ON e.butaca_id = b.id
@@ -115,7 +115,6 @@ def obtener_compra_por_id(id_compra, usuario_id):
             "butaca": f"{fila.fila}{fila.numero}",
             "tipo_butaca": fila.tipo_butaca,
             "precio": float(fila.precio),
-            "qr_codigo": fila.qr_codigo,
             "estado": fila.estado
         })
 
