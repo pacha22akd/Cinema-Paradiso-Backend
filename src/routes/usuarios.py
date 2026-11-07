@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, g
-
+from flask import Blueprint, request, jsonify, g, current_app
 import src.validators.usuarios as usuarios_validator
 import src.services.usuarios as usuarios_service
 import src.utils.errores as errores
@@ -15,7 +14,7 @@ usuarios_bp = Blueprint("usuarios", __name__)
 @auth.requiere_auth
 def modificar_perfil():
 
-    id_usuario = g.usuario_actual["id"]
+    id_usuario = g.usuario_id
 
     datos = request.get_json(silent=True)
 
