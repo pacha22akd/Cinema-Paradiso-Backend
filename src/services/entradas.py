@@ -1,6 +1,7 @@
 from datetime import date
 from repositories import entradas
 from validators import entradas
+from src.utils.errores import devolver_error
 
 def validar_qr(codigo, funcion_id):
 
@@ -41,3 +42,14 @@ def validar_qr(codigo, funcion_id):
 
     return {"valida": True, "motivo": "Entrada válida", "estado_entrada": "usada"}
 
+
+def consultar_entrada(id):
+
+    entrada = entradas.obtener_entrada(id)
+
+    if entrada is None:
+        return devolver_error("No existe la entrada buscada", 404)
+
+    entrada["fecha_hora_inicio"] = str(entrada["fecha_hora_inicio"])
+
+    return entrada, 200
