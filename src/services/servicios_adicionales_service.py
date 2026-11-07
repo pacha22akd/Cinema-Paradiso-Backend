@@ -1,4 +1,0 @@
-from repositories import servicios_adicionales_repository
-
-def listar_servicios_adicionales(categoria):
-    return servicios_adicionales_repository.obtener_servicios_adicionales(categoria)
