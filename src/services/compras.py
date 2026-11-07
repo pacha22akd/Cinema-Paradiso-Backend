@@ -185,9 +185,6 @@ def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
     if resultado == "no_existe":
         return devolver_error("No existe el servicio", 404)
 
-    if resultado == "sin_stock":
-        return devolver_error("Stock insuficiente", 409)
-
     return {
         "compra_id": compra_id,
         "servicio_id": servicio_id,
