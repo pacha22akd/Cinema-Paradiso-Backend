@@ -87,9 +87,6 @@ def cancelar_compra_por_id(id_compra):
     respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id)
     return jsonify(respuesta), codigo
 
-
-@compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
-@requiere_auth
 @compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
 @requiere_auth
 def post_servicio_a_compra(id):
