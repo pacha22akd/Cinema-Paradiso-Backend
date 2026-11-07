@@ -289,55 +289,44 @@ def buscar_compra(id):
 
     return compras[0]
 
-
 def agregar_servicio_a_compra(compra_id, servicio_id, cantidad):
 
-    select_query = """ SELECT precio, stock FROM servicios WHERE id = :servicio_id """
-    stock_query = "UPDATE servicios SET stock = stock - :cantidad WHERE id = :servicio_id"
+    select_query = "SELECT precio FROM servicios WHERE id = :servicio_id"
     insert_query = """ INSERT INTO compra_servicios (compra_id, servicio_id, cantidad, precio_unitario, subtotal)
     VALUES (:compra_id, :servicio_id, :cantidad, :precio_unitario, :subtotal) """
     total_query = "UPDATE compras SET total = total + :subtotal WHERE id = :compra_id"
 
     conn = db.connect()
 
-    valor = {"servicio_id": servicio_id}
+    try:
+        fila = conn.execute(text(select_query), {"servicio_id": servicio_id}).fetchone()
 
-    resultado = conn.execute(text(select_query), valor)
+        if fila is None:
+            return "no_existe"
 
-    servicios = []
-    for fila in resultado:
-        servicio = {"precio": fila.precio, "stock": fila.stock}
-        servicios.append(servicio)
+        precio = fila.precio
+        subtotal = precio * cantidad
 
-    if len(servicios) == 0:
+        valores = {
+            "compra_id": compra_id,
+            "servicio_id": servicio_id,
+            "cantidad": cantidad,
+            "precio_unitario": precio,
+            "subtotal": subtotal,
+        }
+
+        conn.execute(text(insert_query), valores)
+        conn.execute(text(total_query), valores)
+        conn.commit()
+
+        return {"precio_unitario": precio, "subtotal": subtotal}
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
         conn.close()
-        return "no_existe"
-
-    precio = servicios[0]["precio"]
-    stock = servicios[0]["stock"]
-
-    if stock is not None and stock < cantidad:
-        conn.close()
-        return "sin_stock"
-
-    subtotal = precio * cantidad
-
-    valores = {
-        "compra_id": compra_id,
-        "servicio_id": servicio_id,
-        "cantidad": cantidad,
-        "precio_unitario": precio,
-        "subtotal": subtotal,
-    }
-
-    conn.execute(text(insert_query), valores)
-    conn.execute(text(stock_query), valores)
-    conn.execute(text(total_query), valores)
-    conn.commit()
-    conn.close()
-
-    return {"precio_unitario": precio, "subtotal": subtotal}
-
 
 def pagar_compra(id, numero_factura):
 
