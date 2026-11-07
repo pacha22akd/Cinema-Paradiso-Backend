@@ -62,7 +62,7 @@ def validar_email(email: str):
 def validar_telefono(telefono: str):
     if not telefono:
             raise ValueError("El telefono es obligatoria")
-    if telefono: # El teléfono puede ser opcional
+    if telefono: 
         telefono_limpio = re.sub(r'[\s\-\(\)]', '', telefono) # Limpia guiones/espacios
         patron = r'^(11|15)[0-9]{8}$'
         if not re.match(patron, telefono_limpio):
