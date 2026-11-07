@@ -1,19 +1,20 @@
 from flask import Blueprint, request, jsonify
-from services import servicios
+from src.services import servicios
 from src.utils.errores import devolver_error
-from src.util.auth import requiere_rol
+from src.utils.auth import requiere_rol
 
 servicios_bp = Blueprint("servicios", __name__)
 
 @servicios_bp.route('/admin/servicios', methods = ['GET'])
+@requiere_rol("administrador")
 def obtener_servicios():
 
     try:
-        servicios = servicios.listar_servicios()
-        if not servicios:
+        lista = servicios.listar_servicios()
+        if not lista:
             return devolver_error("No hay servicios actualmente", 404)
 
-        return jsonify(servicios), 200
+        return jsonify(lista), 200
     
     except Exception as e:
         return devolver_error(str(e), 500)
@@ -26,7 +27,7 @@ def nuevo_servicio():
     datos = request.get_json()
 
     try:
-        servicio = servicios.dar_de_alta_servicio(
+        servicios.dar_de_alta_servicio(
             datos.get("nombre"),
             datos.get("descripcion"),
             datos.get("categoria"),
@@ -34,7 +35,7 @@ def nuevo_servicio():
             datos.get("stock"),
             datos.get("imagen_url"),
         )
-        return jsonify({"message": "Se creó el servicio correspondiente"}), 200
+        return jsonify({"message": "Se creó el servicio correspondiente"}), 201
 
     except ValueError as e:
         return devolver_error(str(e), 400)
@@ -63,7 +64,9 @@ def patch_servicio(id):
             return devolver_error("No existe el servicio buscado", 404)
 
         return jsonify({"message": "Servicio modificado con éxito."}), 200
-    
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
     except Exception as e:
         return devolver_error(str(e), 500)
 
@@ -79,7 +82,8 @@ def delete_servicio(id):
             return devolver_error("No existe el servicio buscado.", 404)
 
         return jsonify({"message": "Servicio eliminado con éxito."}), 200
-
+    except Exception as e:
+        return devolver_error(str(e), 500)
 
 
 @servicios_bp.route("/servicios", methods=["GET"])
@@ -88,8 +92,8 @@ def get_servicios_adicionales():
     categoria = request.args.get("categoria")
 
     try:
-        servicios = servicios.listar_servicios_adicionales(categoria)
-        return jsonify(servicios), 200
+        lista = servicios.listar_servicios_adicionales(categoria)
+        return jsonify(lista), 200
 
     except Exception as e:
         return devolver_error(str(e), 500)
