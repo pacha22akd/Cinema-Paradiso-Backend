@@ -2,7 +2,7 @@ from datetime import datetime
 from src.repositories.compras import cancelar_compra_en_bd
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
-from src.validators.compras import validar_datos_compra
+from src.validators.compras import validar_datos_compra, validar_servicio_en_compra
 from src.repositories import compras
 from src.utils.errores import devolver_error
 
@@ -169,7 +169,7 @@ def cancelar_compra(id_compra, id_usuario):
 
 def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
 
-    servicio_id, cantidad = validar_datos_compra.validar_servicio_en_compra(servicio_id, cantidad)
+    servicio_id, cantidad = validar_servicio_en_compra(servicio_id, cantidad)
 
     compra = compras.buscar_compra(compra_id)
 

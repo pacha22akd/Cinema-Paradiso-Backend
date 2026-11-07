@@ -81,21 +81,19 @@ def listar_compras():
 @compras_bp.route("/compras/<int:id_compra>/cancelar", methods=["PATCH"])
 @requiere_auth
 def cancelar_compra_por_id(id_compra):
-
     valido, error = validar_id_compra(id_compra)
-
     if not valido:
         return jsonify({"error": error}), 400
 
-    return jsonify({
-        "error": "Falta integrar la autenticacion del usuario"
-    }), 501
+    respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id)
+    return jsonify(respuesta), codigo
 
 
 @compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
 @requiere_auth
+@compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
+@requiere_auth
 def post_servicio_a_compra(id):
-
     try:
         datos = request.get_json()
 
@@ -103,6 +101,7 @@ def post_servicio_a_compra(id):
             id,
             datos.get("servicio_id"),
             datos.get("cantidad"),
+            g.usuario_id
         )
 
     except ValueError as e:
@@ -111,13 +110,12 @@ def post_servicio_a_compra(id):
     except Exception as e:
         return devolver_error(str(e), 500)
 
-
 @compras_bp.route("/compras/<int:id>/pagar", methods=["POST"])
 @requiere_auth
 def post_pagar_compra(id):
 
     try:
-        return compras.pagar_compra(id)
+        return compras.pagar_compra(id, g.usuario_id)
 
     except Exception as e:
         return devolver_error(str(e), 500)

@@ -208,7 +208,7 @@ def cancelar_compra_en_bd(id_compra, id_usuario):
             conn.rollback()
             return "no_existe"
 
-        if compra.estado != "pendiente":
+        if compra.estado not in ("pendiente", "pagada"):
             conn.rollback()
             return "no_cancelable"
 
