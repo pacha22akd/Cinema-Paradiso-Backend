@@ -77,13 +77,12 @@ def listar_compras():
 
 
 @compras_bp.route("/compras/<int:id_compra>/cancelar", methods=["PATCH"])
+@requiere_auth
 def cancelar_compra_por_id(id_compra):
-
     valido, error = validar_id_compra(id_compra)
-
     if not valido:
         return jsonify({"error": error}), 400
 
-    return jsonify({
-        "error": "Falta integrar la autenticacion del usuario"
-    }), 501
+    respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id)
+    return jsonify(respuesta), codigo
+
