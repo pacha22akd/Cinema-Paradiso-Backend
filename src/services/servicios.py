@@ -1,5 +1,5 @@
-from repositories import servicios
-from validators import servicios_validator
+from src.repositories import servicios
+from src.validators.servicios import validar_alta_servicio, validar_modificacion_servicio
 
 def listar_servicios():
     return servicios.obtener_servicios()
@@ -7,12 +7,12 @@ def listar_servicios():
 
 def dar_de_alta_servicio(nombre, descripcion, categoria, precio, stock, imagen_url):
 
-    servicios_validator.validar_alta_servicio(nombre, precio, stock)
+    validar_alta_servicio(nombre, precio, stock)
     servicios.agregar_servicio(nombre, descripcion, categoria, precio, stock, imagen_url)
 
 def alterar_servicio(id, nombre, descripcion, categoria, precio, stock, imagen_url):
 
-    servicios_validator.validar_modificacion_servicio(id, nombre, precio, stock)
+    validar_modificacion_servicio(id, nombre, precio, stock)
 
     actual = servicios.obtener_servicio(id)
 

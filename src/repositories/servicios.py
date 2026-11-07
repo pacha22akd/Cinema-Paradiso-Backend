@@ -38,18 +38,18 @@ def obtener_servicios_adicionales(categoria):
         valores = {"categoria": categoria}
         resultado = conn.execute(text(query), valores)
 
-         servicios = []
-        for fila in resultado:
-            servicio = {
-                "id": fila.id,
-                "nombre": fila.nombre,
-                "descripcion": fila.descripcion,
-                "categoria": fila.categoria,
-                "precio": fila.precio,
-                "stock": fila.stock,
-                "imagen_url": fila.imagen_url,
-            }
-            servicios.append(servicio)
+    servicios = []
+    for fila in resultado:
+        servicio = {
+            "id": fila.id,
+            "nombre": fila.nombre,
+            "descripcion": fila.descripcion,
+            "categoria": fila.categoria,
+            "precio": fila.precio,
+            "stock": fila.stock,
+            "imagen_url": fila.imagen_url,
+        }
+        servicios.append(servicio)
 
     conn.close()
 
@@ -72,7 +72,6 @@ def agregar_servicio(nombre, descripcion, categoria, precio, stock, imagen_url):
 
 def modificar_servicio(id, nombre, descripcion, categoria, precio, stock, imagen_url):
 
-    conn = db.connect()
     query = """UPDATE servicios SET nombre = :nombre, descripcion = :descripcion, categoria = :categoria, precio = :precio, stock = :stock, imagen_url = :imagen_url WHERE id = :id"""
 
     valores = {

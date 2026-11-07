@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services import entradas
+from src.services import entradas
 from src.utils.errores import devolver_error
 from src.utils.auth import requiere_auth, requiere_rol
 
