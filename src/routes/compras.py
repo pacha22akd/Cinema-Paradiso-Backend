@@ -11,8 +11,9 @@ compras_bp = Blueprint('compras', __name__)
 def crear_compra():
     try:
         datos = request.get_json(silent=True)
+
         if not isinstance(datos, dict):
-            return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
+            return devolver_error("No se recibieron los datos de la compra", 400)
 
         usuario_id = g.usuario_id
         funcion_id = datos.get('funcion_id')
@@ -30,10 +31,10 @@ def crear_compra():
             "monto_total": resultado["monto_total"]
         }), 201
 
-    except Exception as e:
-        return devolver_error(f"Error inesperado al procesar la compra: {str(e)}", 500)
+    except Exception:
+        return devolver_error("No se pudo procesar la compra", 500)
     
-
+    
 @compras_bp.route("/compras/<int:id>", methods=["GET"])
 @requiere_auth
 def get_compra(id):
@@ -45,8 +46,8 @@ def get_compra(id):
 
         return jsonify(resultado), 200
 
-    except Exception as e:
-        return devolver_error(str(e), 500)
+    except Exception:
+        return devolver_error("No se pudo obtener la compra", 500)
 
 #----------------------
 @compras_bp.route('/compras', methods=['GET'])
@@ -73,9 +74,8 @@ def listar_compras():
     except PermissionError as e:
         return devolver_error(str(e), 401)
 
-    except Exception as e:  # noqa: BLE001
-        return devolver_error(f"Error interno del servidor: {str(e)}", 500)
-
+    except Exception:
+        return devolver_error("No se pudo obtener el historial de compras", 500)
 
 @compras_bp.route("/compras/<int:id_compra>/cancelar", methods=["PATCH"])
 @requiere_auth
@@ -83,7 +83,7 @@ def cancelar_compra_por_id(id_compra):
     valido, error = validar_id_compra(id_compra)
     if not valido:
         return jsonify({"error": error}), 400
-    datos = request.get_json()
+    datos = request.get_json(silent=True) or {}
     motivo = datos.get("motivo")
     respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id, motivo)
     return jsonify(respuesta), codigo
@@ -92,7 +92,10 @@ def cancelar_compra_por_id(id_compra):
 @requiere_auth
 def post_servicio_a_compra(id):
     try:
-        datos = request.get_json()
+        datos = request.get_json(silent=True)
+
+        if not isinstance(datos, dict):
+            return devolver_error("No se recibieron los datos del servicio", 400)
 
         return compras.agregar_servicio_a_compra(
             id,
@@ -104,8 +107,8 @@ def post_servicio_a_compra(id):
     except ValueError as e:
         return devolver_error(str(e), 400)
 
-    except Exception as e:
-        return devolver_error(str(e), 500)
+    except Exception:
+        return devolver_error("Error interno al agregar el servicio", 500)
 
 @compras_bp.route("/compras/<int:id>/pagar", methods=["POST"])
 @requiere_auth

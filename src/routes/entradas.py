@@ -8,10 +8,12 @@ entradas_bp = Blueprint("entradas", __name__)
 @entradas_bp.route("/admin/entradas/validar_qr", methods=["POST"])
 @requiere_rol("administrador")
 def post_validar_qr():
-
-    datos = request.get_json()
-
     try:
+        datos = request.get_json(silent=True)
+
+        if not isinstance(datos, dict):
+            return devolver_error("No se recibieron los datos de la entrada", 400)
+        
         resultado = entradas.validar_qr(
             datos.get("qr_codigo"),
             datos.get("funcion_id"),
@@ -28,5 +30,5 @@ def get_entrada(id):
     try:
         return entradas.consultar_entrada(id, g.usuario_id)
 
-    except Exception as e:
-        return devolver_error(str(e), 500)
+    except Exception:
+        return devolver_error("No se pudo obtener la entrada", 500)

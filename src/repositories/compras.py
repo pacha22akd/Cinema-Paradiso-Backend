@@ -84,7 +84,7 @@ def obtener_compra_por_id(id_compra, usuario_id):
 
     valores = {"id": id_compra}
 
-    conn = db.engine.connect()
+    conn = db.connect()
     
     resultado_compra = conn.execute(text(query_compra), {"id": id_compra, "usuario_id": usuario_id}).fetchone()
     if not resultado_compra:

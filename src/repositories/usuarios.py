@@ -77,7 +77,7 @@ def crear_usuario(nombre, apellido, email, password_hash, telefono, rol_id):
         "rol_id": rol_id
     }
     
-    conn = db.engine.connect()
+    conn = db.connect()
     resultado = conn.execute(text(query), valores)
     conn.commit() 
     nuevo_id = resultado.lastrowid
