@@ -135,3 +135,13 @@ def obtener_historial_peliculas(usuario_id):
     """)
     with db.connect() as conn:
         return conn.execute(sql, {"usuario_id": usuario_id}).fetchall()
+
+def obtener_rol_id_por_nombre(nombre_rol):
+    sql = text("""
+        SELECT id 
+        FROM roles 
+        WHERE nombre = :nombre
+    """)
+    with db.connect() as conn:
+        resultado = conn.execute(sql, {"nombre": nombre_rol}).fetchone()
+        return resultado.id if resultado else None
