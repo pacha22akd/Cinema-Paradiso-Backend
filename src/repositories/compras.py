@@ -181,23 +181,36 @@ def obtener_compras_usuario(usuario_id, filtros, offset, limit):
 
     return filas, total
 
-
+ESTADOS_CANCELABLES = ("pendiente", "pagada")
+HORAS_LIMITE_CANCELACION = 2
 
 def cancelar_compra_en_bd(id_compra, id_usuario):
-
     conn = db.connect()
 
     try:
         query = """
-            SELECT usuario_id, estado
-            FROM compras
-            WHERE id = :id_compra
+            SELECT c.usuario_id,
+                   c.estado,
+                   (SELECT f.fecha_hora_inicio
+                      FROM funciones f
+                     WHERE f.id = c.funcion_id) AS fecha_hora_inicio,
+                   NOW() > DATE_SUB(
+                       (SELECT f.fecha_hora_inicio
+                          FROM funciones f
+                         WHERE f.id = c.funcion_id),
+                       INTERVAL :horas HOUR
+                   ) AS fuera_de_plazo
+            FROM compras c
+            WHERE c.id = :id_compra
             FOR UPDATE
         """
-
+        
         valores = {"id_compra": id_compra}
 
-        resultado = conn.execute(text(query), valores)
+        resultado = conn.execute(
+            text(query),
+            {"id_compra": id_compra, "horas": HORAS_LIMITE_CANCELACION}
+        )
         compra = resultado.fetchone()
 
         if compra is None:
@@ -208,9 +221,13 @@ def cancelar_compra_en_bd(id_compra, id_usuario):
             conn.rollback()
             return "no_existe"
 
-        if compra.estado not in ("pendiente", "pagada"):
+        if compra.estado not in ESTADOS_CANCELABLES:
             conn.rollback()
             return "no_cancelable"
+
+        if compra.fuera_de_plazo:
+            conn.rollback()
+            return "fuera_de_plazo"
 
         query = """
             UPDATE compras
@@ -240,7 +257,6 @@ def cancelar_compra_en_bd(id_compra, id_usuario):
 
     finally:
         conn.close()
-
 
 def buscar_compra(id):
 
