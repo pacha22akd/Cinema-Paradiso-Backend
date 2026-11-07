@@ -14,7 +14,7 @@ def buscar_entrada_por_qr(codigo):
     conn = db.connect()
     resultado = conn.execute(text(query), valores)
     filas = [dict(row._mapping) for row in resultado]
-    conn.close
+    conn.close()
 
     if len(filas) == 0:
         return None
@@ -45,6 +45,9 @@ def obtener_entrada(id):
     JOIN funciones f ON e.funcion_id = f.id
     JOIN peliculas p ON f.pelicula_id = p.id
     WHERE e.id = :id """
+    
+    conn = db.connect()
+    resultado = conn.execute(text(query), {"id": id})
 
     entradas = []
     for fila in resultado:
