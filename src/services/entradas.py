@@ -43,9 +43,9 @@ def validar_qr(codigo, funcion_id):
     return {"valida": True, "motivo": "Entrada válida", "estado_entrada": "usada"}
 
 
-def consultar_entrada(id):
+def consultar_entrada(id, usuario_id):
 
-    entrada = obtener_entrada(id)
+    entrada = obtener_entrada(id, usuario_id)
 
     if entrada is None:
         return devolver_error("No existe la entrada buscada", 404)

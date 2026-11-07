@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from src.services import entradas
 from src.utils.errores import devolver_error
 from src.utils.auth import requiere_auth, requiere_rol
@@ -26,7 +26,7 @@ def post_validar_qr():
 def get_entrada(id):
 
     try:
-        return entradas.consultar_entrada(id)
+        return entradas.consultar_entrada(id, g.usuario_id)
 
     except Exception as e:
         return devolver_error(str(e), 500)
