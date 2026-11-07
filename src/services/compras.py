@@ -12,7 +12,6 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     if error:
         return error
 
-  
     funcion = obtener_funcion_por_id(funcion_id)
     if not funcion:
         return {"error": "La función solicitada no existe", "status": 404}  
@@ -42,11 +41,13 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     precio_unitario = funcion["precio_base"]
     resultado = registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario)
 
+    if resultado == "butaca_ocupada":
+        return{"error": "Una de las butacas ya fue ocupada por otra compra", "status": 409}
+
     if resultado is None:
         return {"error": "No se pudo registrar la compra", "status": 500}
 
     return resultado
-
 
 def obtener_compra(id_compra, usuario_id):
     compra = compras.obtener_compra_por_id(id_compra, usuario_id)
@@ -61,7 +62,6 @@ def obtener_compra(id_compra, usuario_id):
     return compra
 
 ESTADOS_VALIDOS = {"pendiente", "pagada", "cancelada", "usada"}
-
 
 def _parse_int(valor, campo, default=None):
     if valor is None or valor == "":
@@ -83,8 +83,6 @@ def _parse_datetime(valor, campo):
             f"(YYYY-MM-DD o YYYY-MM-DDTHH:MM:SS)"
         )
 
-
-
 def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
                            fecha_hasta=None, page=None, per_page=None):
     
@@ -97,7 +95,6 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
     fecha_desde = _parse_datetime(fecha_desde, "fecha_desde")
     fecha_hasta = _parse_datetime(fecha_hasta, "fecha_hasta")
 
-    
     if page < 1:
         raise ValueError("'page' debe ser mayor a 0")
     if per_page < 1 or per_page > 100:
@@ -109,7 +106,6 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
     if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
         raise ValueError("'fecha_desde' no puede ser mayor que 'fecha_hasta'")
 
-    
     filtros = {
         "estado":      estado,
         "fecha_desde": fecha_desde,
@@ -153,9 +149,9 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
         },
     }
 
-def cancelar_compra(id_compra, id_usuario):
+def cancelar_compra(id_compra, id_usuario, id_motivo):
     
-    resultado = cancelar_compra_en_bd(id_compra, id_usuario)
+    resultado = cancelar_compra_en_bd(id_compra, id_usuario, id_motivo)
 
     if resultado == "no_existe":
         return {"error": "Compra no encontrada"}, 404
