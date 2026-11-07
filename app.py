@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 from flask import Flask
 
-from src.routes.servicios_adicionales import servicios_adicionales_bp
 from src.routes.sesiones import sesiones_bp
 from src.routes.usuarios import usuarios_bp
 from src.routes.servicios import servicios_bp
@@ -21,7 +20,6 @@ app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
-app.register_blueprint(servicios_adicionales_bp)
 app.register_blueprint(sesiones_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(servicios_bp)
