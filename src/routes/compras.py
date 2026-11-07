@@ -77,7 +77,6 @@ def listar_compras():
         return devolver_error(f"Error interno del servidor: {str(e)}", 500)
 
 
-
 @compras_bp.route("/compras/<int:id_compra>/cancelar", methods=["PATCH"])
 @requiere_auth
 def cancelar_compra_por_id(id_compra):
