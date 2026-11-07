@@ -1,17 +1,18 @@
-import datetime
+from datetime import datetime
 from src.repositories.compras import cancelar_compra_en_bd
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
 from src.repositories.compras import registrar_compra_transaccion
-from src.validators.compras import validar_datos_compra
+from src.validators.compras import validar_datos_compra, validar_servicio_en_compra
 from src.repositories import compras
+from src.utils.errores import devolver_error
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
-    # 1. Validaciones de formato
+   
     error = validar_datos_compra(usuario_id, funcion_id, butaca_ids)
     if error:
         return error
 
-    # 2. Validar que la función solicitada exista
+  
     funcion = obtener_funcion_por_id(funcion_id)
     if not funcion:
         return {"error": "La función solicitada no existe", "status": 404}  
@@ -38,7 +39,6 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
         if butaca_encontrada["estado_disponibilidad"] == "ocupada":
             return {"error": f"La butaca {b_id} ya está ocupada", "status": 409}
 
-    # 3. Obtener el precio unitario y ejecutar la transacción
     precio_unitario = funcion["precio_base"]
     resultado = registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario)
 
@@ -48,8 +48,8 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     return resultado
 
 
-def obtener_compra(id_compra):
-    compra = compras.obtener_compra_por_id(id_compra)
+def obtener_compra(id_compra, usuario_id):
+    compra = compras.obtener_compra_por_id(id_compra, usuario_id)
 
     if compra is None:
         return {"error": "No existe la compra buscada", "status": 404}
@@ -60,7 +60,6 @@ def obtener_compra(id_compra):
 
     return compra
 
-#-------------------------------------
 ESTADOS_VALIDOS = {"pendiente", "pagada", "cancelada", "usada"}
 
 
@@ -166,4 +165,56 @@ def cancelar_compra(id_compra, id_usuario):
         return {"error": "La compra no se puede cancelar"}, 409
 
     return {"mensaje": "Compra cancelada correctamente"}, 200
+
+
+def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
+
+    servicio_id, cantidad = validar_servicio_en_compra(servicio_id, cantidad)
+
+    compra = compras.buscar_compra(compra_id)
+
+    if compra is None:
+        return devolver_error("No existe la compra", 404)
+    
+    if compra["usuario_id"] != usuario_id:
+        return devolver_error("La compra no pertenece al usuario", 403)
+
+    if compra["estado"] != "pendiente":
+        return devolver_error("Solo se pueden agregar servicios a una compra pendiente", 409)
+
+    resultado = compras.agregar_servicio_a_compra(compra_id, servicio_id, cantidad)
+
+    if resultado == "no_existe":
+        return devolver_error("No existe el servicio", 404)
+
+    if resultado == "sin_stock":
+        return devolver_error("Stock insuficiente", 409)
+
+    return {
+        "compra_id": compra_id,
+        "servicio_id": servicio_id,
+        "cantidad": cantidad,
+        "precio_unitario": resultado["precio_unitario"],
+        "subtotal": resultado["subtotal"],
+    }, 201
+
+
+def pagar_compra(id, usuario_id):
+
+    compra = compras.buscar_compra(id)
+
+    if compra is None:
+        return devolver_error("No existe la compra", 404)
+
+    if compra["usuario_id"] != usuario_id:
+        return devolver_error("La compra no pertenece al usuario", 403)
+
+    if compra["estado"] != "pendiente":
+        return devolver_error("La compra no está pendiente de pago", 409)
+
+    numero_factura = "FAC-" + str(id).zfill(6)  #.zfill llena con ceros a la izquierda. "FAC-" se inserta adelante.
+
+    compras.pagar_compra(id, numero_factura)
+
+    return {"compra_id": id, "estado": "pagada", "numero_factura": numero_factura}
 

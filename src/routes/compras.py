@@ -7,13 +7,14 @@ from src.validators.compras import validar_id_compra
 compras_bp = Blueprint('compras', __name__)
 
 @compras_bp.route('/compras', methods=['POST'])
+@requiere_auth
 def crear_compra():
     try:
         datos = request.get_json(silent=True)
         if not isinstance(datos, dict):
             return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
 
-        usuario_id = datos.get('usuario_id')
+        usuario_id = g.usuario_id
         funcion_id = datos.get('funcion_id')
         butaca_ids = datos.get('butaca_ids')
 
@@ -34,9 +35,10 @@ def crear_compra():
     
 
 @compras_bp.route("/compras/<int:id>", methods=["GET"])
+@requiere_auth
 def get_compra(id):
     try:
-        resultado = compras.obtener_compra(id)
+        resultado = compras.obtener_compra(id, g.usuario_id)
 
         if "error" in resultado:
             return devolver_error(resultado["error"], resultado["status"])
@@ -86,3 +88,34 @@ def cancelar_compra_por_id(id_compra):
     respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id)
     return jsonify(respuesta), codigo
 
+
+@compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
+@requiere_auth
+@compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
+@requiere_auth
+def post_servicio_a_compra(id):
+    try:
+        datos = request.get_json()
+
+        return compras.agregar_servicio_a_compra(
+            id,
+            datos.get("servicio_id"),
+            datos.get("cantidad"),
+            g.usuario_id
+        )
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+
+    except Exception as e:
+        return devolver_error(str(e), 500)
+
+@compras_bp.route("/compras/<int:id>/pagar", methods=["POST"])
+@requiere_auth
+def post_pagar_compra(id):
+
+    try:
+        return compras.pagar_compra(id, g.usuario_id)
+
+    except Exception as e:
+        return devolver_error(str(e), 500)
