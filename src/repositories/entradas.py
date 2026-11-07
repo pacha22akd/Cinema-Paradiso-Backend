@@ -35,7 +35,7 @@ def marcar_entrada_usada(id):
 
     return filas > 0
 
-def obtener_entrada(id):
+def obtener_entrada(id, usuario_id):
 
     query = """ SELECT e.id, e.qr_codigo, e.estado, e.precio, b.fila AS butaca_fila, b.numero AS butaca_numero,
     s.nombre AS sala, f.fecha_hora_inicio, p.titulo AS pelicula
@@ -44,10 +44,11 @@ def obtener_entrada(id):
     JOIN salas s ON b.sala_id = s.id
     JOIN funciones f ON e.funcion_id = f.id
     JOIN peliculas p ON f.pelicula_id = p.id
-    WHERE e.id = :id """
+    JOIN compras c ON e.compra_id = c.id
+    WHERE e.id = :id AND c.usuario_id = :usuario_id """
     
     conn = db.connect()
-    resultado = conn.execute(text(query), {"id": id})
+    resultado = conn.execute(text(query), {"id": id, "usuario_id": usuario_id})
 
     entradas = []
     for fila in resultado:
