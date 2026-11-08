@@ -33,6 +33,12 @@ def modificar_perfil():
         if perfil_actualizado == "email_duplicado":
             return errores.devolver_error("El email ya se encuentra registrado", 409)
 
+        if perfil_actualizado == "campo_no_permitido":
+            return errores.devolver_error("Campo no permitido", 400)
+
+        if perfil_actualizado == "error_bd":
+            return errores.devolver_error("No se pudo modificar el perfil", 500)
+
         return jsonify(perfil_actualizado), 200
 
     except Exception:

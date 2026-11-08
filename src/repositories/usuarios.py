@@ -114,7 +114,7 @@ def obtener_perfil_usuario(usuario_id):
 def obtener_usuario_por_email(email):
     sql = text("""
         SELECT u.id, u.nombre, u.apellido, u.email, u.password_hash,
-               u.telefono r.nombre AS rol
+               u.telefono, r.nombre AS rol
         FROM usuarios u
         JOIN roles r ON u.rol_id = r.id
         WHERE u.email = :email
