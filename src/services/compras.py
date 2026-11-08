@@ -5,6 +5,7 @@ from src.repositories.compras import registrar_compra_transaccion
 from src.validators.compras import validar_datos_compra, validar_servicio_en_compra
 from src.repositories import compras
 from src.utils.errores import devolver_error
+from src.utils.mail import enviar_mail_compra
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
    
@@ -208,5 +209,14 @@ def pagar_compra(id, usuario_id):
 
     compras.pagar_compra(id, numero_factura)
 
-    return {"compra_id": id, "estado": "pagada", "numero_factura": numero_factura}
+    email_enviado = False
+    try:
+        filas = compras.obtener_datos_mail(id)
+        enviar_mail_compra(filas)
+        compras.marcar_email_enviado(id)
+        email_enviado = True
+    except Exception as e:
+        print(f"No se pudo enviar el mail de la compra {id}: {e}")
+
+    return {"compra_id": id, "estado": "pagada", "numero_factura": numero_factura, "email_enviado": email_enviado}
 
