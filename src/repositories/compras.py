@@ -46,10 +46,6 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
         }
 
     except Exception as e:
-        original =getattr(e, "orig", None)
-        if getattr(original, "errno", None) == 1062: #duplicate entry es
-            return "butaca_ocupada"
-        
         print(f"Error en la transacción de compra: {e}")
         return None
     
