@@ -41,9 +41,6 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     precio_unitario = funcion["precio_base"]
     resultado = registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario)
 
-    if resultado == "butaca_ocupada":
-        return{"error": "Una de las butacas ya fue ocupada por otra compra", "status": 409}
-
     if resultado is None:
         return {"error": "No se pudo registrar la compra", "status": 500}
 
