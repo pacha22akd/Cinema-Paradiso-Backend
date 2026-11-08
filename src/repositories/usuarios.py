@@ -3,19 +3,20 @@ from src.utils.config import db
 
 
 def actualizar_perfil(id_usuario, datos):
-
-    columnas_permitidas = ("nombre", "apellido", "email", "telefono")
-
+    columnas_permitidas = ("nombre", "apellido", "email", "telefono", "password_hash")
     condiciones = []
     parametros = {"id_usuario": id_usuario}
 
     for campo, valor in datos.items():
 
         if campo not in columnas_permitidas:
-            raise ValueError("Campo no permitido")
+            return "campo_no_permitido"
 
         condiciones.append(f"{campo} = :{campo}")
         parametros[campo] = valor
+
+    if len(condiciones) == 0:
+        return "campo_no_permitido"
 
     query = "UPDATE usuarios SET " + ", ".join(condiciones)
     query += " WHERE id = :id_usuario"
@@ -25,7 +26,10 @@ def actualizar_perfil(id_usuario, datos):
     try:
         consulta = "SELECT id FROM usuarios WHERE id = :id_usuario"
 
-        resultado = conn.execute(text(consulta), {"id_usuario": id_usuario})
+        resultado = conn.execute(
+            text(consulta),
+            {"id_usuario": id_usuario}
+        )
 
         if resultado.fetchone() is None:
             return None
@@ -36,7 +40,13 @@ def actualizar_perfil(id_usuario, datos):
                           WHERE email = :email
                           AND id != :id_usuario"""
 
-            resultado = conn.execute(text(consulta), {"email": datos["email"], "id_usuario": id_usuario})
+            resultado = conn.execute(
+                text(consulta),
+                {
+                    "email": datos["email"],
+                    "id_usuario": id_usuario
+                }
+            )
 
             if resultado.fetchone() is not None:
                 return "email_duplicado"
@@ -47,7 +57,10 @@ def actualizar_perfil(id_usuario, datos):
                       FROM usuarios
                       WHERE id = :id_usuario"""
 
-        resultado = conn.execute(text(consulta), {"id_usuario": id_usuario})
+        resultado = conn.execute(
+            text(consulta),
+            {"id_usuario": id_usuario}
+        )
 
         fila = resultado.fetchone()
 
@@ -57,7 +70,7 @@ def actualizar_perfil(id_usuario, datos):
 
     except Exception:
         conn.rollback()
-        raise
+        return "error_bd"
 
     finally:
         conn.close()
@@ -88,11 +101,11 @@ def crear_usuario(nombre, apellido, email, password_hash, telefono, rol_id):
 #-----------------------------------------------
 def obtener_perfil_usuario(usuario_id):
     sql = text("""
-        SELECT u.id, u.nombre, u.apellido, u.email, u.telefono,
-               u.fecha_registro, u.activo, r.nombre AS rol
+        SELECT u.id, u.nombre, u.apellido, u.email, 
+                u.telefono, u.fecha_registro, r.nombre AS rol
         FROM usuarios u
         JOIN roles r ON u.rol_id = r.id
-        WHERE u.id = :usuario_id AND u.activo = TRUE
+        WHERE u.id = :usuario_id
     """)
     with db.connect() as conn:
         return conn.execute(sql, {"usuario_id": usuario_id}).fetchone()

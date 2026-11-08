@@ -4,8 +4,16 @@ from werkzeug.security import generate_password_hash
 
 
 def modificar_perfil(id_usuario, datos):
+    datos_actualizados = datos.copy()
 
-    perfil = usuarios.actualizar_perfil(id_usuario, datos)
+    if "password" in datos_actualizados:
+        password = datos_actualizados.pop("password")
+        password_hash = generate_password_hash(password)
+        datos_actualizados["password_hash"] = password_hash
+
+    perfil = usuarios.actualizar_perfil(
+        id_usuario, datos_actualizados
+    )
 
     return perfil
 
