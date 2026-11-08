@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     password_hash  VARCHAR(255) NOT NULL,
     telefono       VARCHAR(30) NOT NULL,
     rol_id         INT NOT NULL,
-    activo         BOOLEAN NOT NULL DEFAULT TRUE,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
