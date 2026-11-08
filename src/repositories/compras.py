@@ -335,3 +335,25 @@ def pagar_compra(id, numero_factura):
     conn.execute(text(entradas_query), valores)
     conn.commit()
     conn.close()
+
+def obtener_datos_mail(compra_id):
+    query = """
+        SELECT u.email, u.nombre, c.total, c.numero_factura,
+               e.qr_codigo, b.fila, b.numero, s.nombre AS sala,
+               p.titulo AS pelicula, f.fecha_hora_inicio
+        FROM compras c
+        JOIN usuarios u ON c.usuario_id = u.id
+        JOIN entradas e ON e.compra_id = c.id
+        JOIN butacas b ON e.butaca_id = b.id
+        JOIN funciones f ON c.funcion_id = f.id
+        JOIN salas s ON f.sala_id = s.id
+        JOIN peliculas p ON f.pelicula_id = p.id
+        WHERE c.id = :id
+    """
+    with db.connect() as conn:
+        return conn.execute(text(query), {"id": compra_id}).fetchall()
+
+
+def marcar_email_enviado(compra_id):
+    with db.begin() as conn:
+        conn.execute(text("UPDATE compras SET email_enviado = TRUE WHERE id = :id"), {"id": compra_id})
