@@ -16,9 +16,6 @@ def iniciar_sesion(email, password):
     if not usuario:
         return devolver_error("Credenciales inválidas", 401)
 
-    if not usuario.activo:
-        return devolver_error("Usuario inactivo", 403)
-
     if not check_password_hash(usuario.password_hash, password):
         return devolver_error("Credenciales inválidas", 401)
 
