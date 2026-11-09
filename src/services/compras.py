@@ -191,9 +191,7 @@ def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
         "subtotal": resultado["subtotal"],
     }, 201
 
-
-def pagar_compra(id, usuario_id):
-
+def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
     compra = compras.buscar_compra(id)
 
     if compra is None:
@@ -202,21 +200,45 @@ def pagar_compra(id, usuario_id):
     if compra["usuario_id"] != usuario_id:
         return devolver_error("La compra no pertenece al usuario", 403)
 
-    if compra["estado"] != "pendiente":
-        return devolver_error("La compra no está pendiente de pago", 409)
+    if compra["estado"] != estado:
+        return devolver_error(mensaje_estado, 409)
+
+    return None
+
+
+def enviar_mail_de_compra(id):
+    # Devuelve True si el mail salió y False si falló, sin cortar el proceso
+    try:
+        filas = compras.obtener_datos_mail(id)
+        enviar_mail_compra(filas)
+        compras.marcar_email_enviado(id)
+        return True
+    except Exception as e:
+        print(f"No se pudo enviar el mail de la compra {id}: {e}")
+        return False
+
+def pagar_compra(id, usuario_id):
+
+    error = validar_compra_del_usuario(id, usuario_id, "pendiente", "La compra no está pendiente de pago")
+    if error:
+        return error
 
     numero_factura = "FAC-" + str(id).zfill(6)  #.zfill llena con ceros a la izquierda. "FAC-" se inserta adelante.
 
     compras.pagar_compra(id, numero_factura)
 
-    email_enviado = False
-    try:
-        filas = compras.obtener_datos_mail(id)
-        enviar_mail_compra(filas)
-        compras.marcar_email_enviado(id)
-        email_enviado = True
-    except Exception as e:
-        print(f"No se pudo enviar el mail de la compra {id}: {e}")
+    # El mail va después de guardar el pago: si falla, la compra igual queda pagada
+    email_enviado = enviar_mail_de_compra(id)
 
     return {"compra_id": id, "estado": "pagada", "numero_factura": numero_factura, "email_enviado": email_enviado}
 
+def reenviar_mail_compra(id, usuario_id):
+
+    error = validar_compra_del_usuario(id, usuario_id, "pagada", "Solo se puede reenviar el mail de una compra pagada")
+    if error:
+        return error
+
+    if not enviar_mail_de_compra(id):
+        return devolver_error("No se pudo enviar el mail. Intentá de nuevo más tarde.", 500)
+
+    return {"compra_id": id, "email_enviado": True}

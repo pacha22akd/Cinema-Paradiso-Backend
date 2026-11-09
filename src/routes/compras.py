@@ -119,3 +119,12 @@ def post_pagar_compra(id):
 
     except Exception as e:
         return devolver_error(str(e), 500)
+
+@compras_bp.route("/compras/<int:id>/reenviar_mail", methods=["POST"])
+@requiere_auth
+def post_reenviar_mail(id):
+    try:
+        return compras.reenviar_mail_compra(id, g.usuario_id)
+
+    except Exception as e:
+        return devolver_error(str(e), 500)
