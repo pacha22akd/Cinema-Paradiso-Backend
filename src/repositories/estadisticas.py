@@ -190,3 +190,62 @@ def obtener_cancelaciones():
     conn.close()
 
     return motivos
+
+def consultar_kpis_resumen():
+   
+    try:
+        with db.connect() as conn:
+            # Entradas vendidas
+            query_entradas = """
+                SELECT COUNT(id) AS total 
+                FROM entradas 
+                WHERE estado IN ('valida', 'usada')
+            """
+            res_entradas = conn.execute(text(query_entradas))
+            entradas = res_entradas.scalar() or 0
+
+            # Ingresos totales
+            query_ingresos = """
+                SELECT SUM(total) AS total 
+                FROM compras 
+                WHERE estado IN ('pagada', 'usada')
+            """
+            res_ingresos = conn.execute(text(query_ingresos))
+            ingresos = res_ingresos.scalar() or 0.0
+
+            # Ocupación media
+            query_ocupacion = """
+                SELECT ROUND(AVG(porcentaje), 1) AS media
+                FROM (
+                    SELECT (COUNT(e.id) * 100.0 / s.capacidad) AS porcentaje
+                    FROM funciones f
+                    JOIN salas s ON f.sala_id = s.id
+                    LEFT JOIN entradas e ON f.id = e.funcion_id AND e.estado <> 'cancelada'
+                    GROUP BY f.id, s.capacidad
+                ) AS subquery
+            """
+            res_ocupacion = conn.execute(text(query_ocupacion))
+            ocupacion = res_ocupacion.scalar() or 0.0
+
+            # Cancelaciones totales
+            query_cancelaciones = """
+                SELECT COUNT(id) AS total 
+                FROM compras 
+                WHERE estado = 'cancelada'
+            """
+            res_cancelaciones = conn.execute(text(query_cancelaciones))
+            cancelaciones = res_cancelaciones.scalar() or 0
+
+            # diccionario con los resultados
+            kpis = {
+                "entradas_vendidas": int(entradas),
+                "ingresos": float(ingresos),
+                "ocupacion_media": float(ocupacion),
+                "total_cancelaciones": int(cancelaciones)
+            }
+
+            return kpis
+
+    except Exception as e:
+        print(f"Error al consultar los KPIs: {e}")
+        return None
