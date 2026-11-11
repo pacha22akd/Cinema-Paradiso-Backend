@@ -180,10 +180,12 @@ INSERT INTO roles (nombre) VALUES
 
 -- USUARIOS: 4 registros
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol_id, fecha_registro) VALUES
-    ('Admin', 'Demo', 'admin.demo@example.com', 'pbkdf2:sha256:600000$b2d73c3902681173$f7b8d8b40213bd93b9b18c68e6776b348f0ce5641accd5c9873c572e351dd9f8', '1111-1000', 1, '2026-10-20 10:00:00'),
-    ('Ana', 'Prueba', 'ana.prueba@example.com', 'pbkdf2:sha256:600000$42c968950e71908e$c980f9d267e4623bfccd0a021ed713c6c0f8f563632d492c35e9d7a6ebd5e161', '1111-2000', 2, '2026-10-20 10:00:00'),
-    ('Bruno', 'Prueba', 'bruno.prueba@example.com', 'pbkdf2:sha256:600000$9d159d1bead84571$3be8af095b8250ae5b1cd49a87d4b457f0c35854c993dbf178a49416dce619b3', '1111-3000', 2, '2026-10-20 10:00:00'),
-    ('Carla', 'Prueba', 'carla.prueba@example.com', 'pbkdf2:sha256:600000$2e6cccb8fc6df658$167a1108a0b670795bc873cd543820a4a46040f91d7883901da82cca18a22f43', '1111-4000', 2, '2026-10-20 10:00:00');
+    ('Milagros', 'Córdoba', 'pcinema129@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-1000', 1, '2026-11-11 10:00:00'),
+    ('Brunella', 'Valdata', 'brunellavaldata@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-2000', 1, '2026-11-11 10:00:00'),
+    ('Sofía', 'Levin', 'sofiaplevin06@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-3000', 1, '2026-11-11 10:00:00'),
+    ('Eugenia', 'Vallejo', 'eugeniavallejo29@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-4000', 1, '2026-11-11 10:00:00'),
+    ('Sebastian', 'Romero', 'sebarom12@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-5000', 1, '2026-11-11 10:00:00'),
+    ('Maximo', 'Febles', 'maximofebles@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-6000', 1, '2026-11-11 10:00:00'),
 
 -- LOCALES: 3 registros, como indica el contexto del enunciado
 INSERT INTO locales (nombre, direccion, ciudad, telefono) VALUES
