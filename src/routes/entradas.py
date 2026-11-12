@@ -16,7 +16,6 @@ def post_validar_qr():
         
         resultado = entradas.validar_qr(
             datos.get("qr_codigo"),
-            datos.get("funcion_id"),
         )
         return jsonify(resultado), 200
 

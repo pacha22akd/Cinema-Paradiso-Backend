@@ -3,10 +3,17 @@ from src.utils.config import db
 
 def buscar_entrada_por_qr(codigo):
 
-    query = """ SELECT e.id, e.funcion_id, e.estado, f.fecha_hora_inicio, f.estado AS estado_funcion 
+
+    #busco la sala, la butaca, la hora de la funcion y que funcion es
+    query = """ 
+    SELECT e.id, e.funcion_id, e.estado, f.fecha_hora_inicio, f.estado AS estado_funcion,
+           p.titulo AS pelicula, s.nombre AS sala, b.fila, b.numero
     FROM entradas e 
     JOIN compras c on e.compra_id = c.id
     JOIN funciones f ON e.funcion_id = f.id
+    JOIN peliculas p ON f.pelicula_id = p.id
+    JOIN salas s ON f.sala_id = s.id
+    JOIN butacas b ON e.butaca_id = b.id
     WHERE e.qr_codigo = :codigo """
 
     valores = {"codigo": codigo}
