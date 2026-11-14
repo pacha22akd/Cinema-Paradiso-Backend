@@ -49,13 +49,13 @@ def get_compra(id):
     except Exception:
         return devolver_error("No se pudo obtener la compra", 500)
 
-#----------------------
+
 @compras_bp.route('/compras', methods=['GET'])
 @requiere_auth
 def listar_compras():
     try:
         resultado = compras.listar_compras_usuario(
-            usuario_id  = g.usuario_id,     # 👈 viene del token
+            usuario_id  = g.usuario_id,  
             estado      = request.args.get("estado"),
             fecha_desde = request.args.get("fecha_desde"),
             fecha_hasta = request.args.get("fecha_hasta"),

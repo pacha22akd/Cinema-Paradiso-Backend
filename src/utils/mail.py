@@ -5,18 +5,17 @@ import qrcode
 from email.message import EmailMessage
 
 
-def generar_qr_png(texto): #convierte el código del QR en una imagen.
+def generar_qr_png(texto): 
     imagen = qrcode.make(texto)
-    archivo = io.BytesIO() # La imagen se arma en memoria y no se guarda en disco
+    archivo = io.BytesIO() 
     imagen.save(archivo, format="PNG")
     return archivo.getvalue()
 
 
 def enviar_mail_compra(filas):
     remitente = os.getenv("MAIL_USUARIO")
-    contrasena = os.getenv("MAIL_CONTRASENA") # Gmail pide una contraseña de aplicación, no la de la cuenta
-
-    compra = filas[0] # el cliente, el total y la factura se repiten en todas las filas
+    contrasena = os.getenv("MAIL_CONTRASENA") 
+    compra = filas[0] 
 
     mensaje = EmailMessage()
     mensaje["Subject"] = f"Cine Paradiso - Tu compra {compra.numero_factura}"

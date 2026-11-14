@@ -61,7 +61,6 @@ def registrar_usuario(datos):
         'rol_id': rol_id
     }
 
-#--------------------------------------
 def obtener_perfil_usuario(usuario_id):
     if not usuario_id:
         raise PermissionError("Usuario no autenticado")

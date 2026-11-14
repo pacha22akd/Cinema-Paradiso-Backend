@@ -66,7 +66,6 @@ def post_usuario():
     except Exception as e:
         return devolver_error(f"Error inesperado: {str(e)}", 500)
 
-#-----------------------------------
 
 @usuarios_bp.route('/usuarios/perfil', methods=['GET'])
 @auth.requiere_auth
