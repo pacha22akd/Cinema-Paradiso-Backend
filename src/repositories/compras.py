@@ -9,7 +9,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
         codigo_compra = f"COMP-{uuid.uuid4().hex[:12].upper()}"
 
         with db.begin() as conn:
-            # 1. Insertar la compra
+            
             query_compra = text("""
                 INSERT INTO compras (usuario_id, funcion_id, codigo, total, estado)
                 VALUES (:usuario_id, :funcion_id, :codigo, :total, 'pendiente')
@@ -22,7 +22,7 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
             })
             compra_id = resultado_compra.lastrowid
 
-            # 2. Insertar las entradas asociadas
+            
             query_entrada = text("""
                 INSERT INTO entradas (compra_id, funcion_id, butaca_id, precio, qr_codigo, estado)
                 VALUES (:compra_id, :funcion_id, :butaca_id, :precio, :qr_codigo, 'pendiente')
@@ -125,7 +125,7 @@ def obtener_compra_por_id(id_compra, usuario_id):
 
     conn.close()
     return compra
-#-------------------------------------------------
+
 def obtener_compras_usuario(usuario_id, filtros, offset, limit):
     """
     Devuelve (filas, total) con las compras del usuario autenticado.
@@ -173,7 +173,7 @@ def obtener_compras_usuario(usuario_id, filtros, offset, limit):
     params["limit"] = limit
     params["offset"] = offset
 
-    # Usamos un solo bloque connect() para hacer las dos consultas
+    
     with db.connect() as conn:
         total = conn.execute(sql_count, params).scalar()
         filas = conn.execute(sql, params).fetchall()

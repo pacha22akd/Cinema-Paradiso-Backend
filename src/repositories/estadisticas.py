@@ -89,7 +89,7 @@ def obtener_ocupacion_peliculas():
             result = conn.execute(text(query))
             rows = result.fetchall()
 
-            # Mapeo a lista de diccionarios con zip
+            #Mapeo a lista de diccionarios con zip
             ocupacion = [dict(zip(result.keys(), row)) for row in rows]
 
             return ocupacion
@@ -121,7 +121,7 @@ def obtener_ocupacion_franjas_horarias():
             result = conn.execute(text(query))
             rows = result.fetchall()
 
-            # Mapeo tradicional
+            
             franjas = [dict(zip(result.keys(), row)) for row in rows]
 
             return franjas
@@ -195,7 +195,7 @@ def consultar_kpis_resumen():
    
     try:
         with db.connect() as conn:
-            # Entradas vendidas
+            
             query_entradas = """
                 SELECT COUNT(id) AS total 
                 FROM entradas 
@@ -204,7 +204,7 @@ def consultar_kpis_resumen():
             res_entradas = conn.execute(text(query_entradas))
             entradas = res_entradas.scalar() or 0
 
-            # Ingresos totales
+            
             query_ingresos = """
                 SELECT SUM(total) AS total 
                 FROM compras 
@@ -213,7 +213,7 @@ def consultar_kpis_resumen():
             res_ingresos = conn.execute(text(query_ingresos))
             ingresos = res_ingresos.scalar() or 0.0
 
-            # Ocupación media
+            
             query_ocupacion = """
                 SELECT ROUND(AVG(porcentaje), 1) AS media
                 FROM (
@@ -227,7 +227,7 @@ def consultar_kpis_resumen():
             res_ocupacion = conn.execute(text(query_ocupacion))
             ocupacion = res_ocupacion.scalar() or 0.0
 
-            # Cancelaciones totales
+            
             query_cancelaciones = """
                 SELECT COUNT(id) AS total 
                 FROM compras 
@@ -236,7 +236,7 @@ def consultar_kpis_resumen():
             res_cancelaciones = conn.execute(text(query_cancelaciones))
             cancelaciones = res_cancelaciones.scalar() or 0
 
-            # diccionario con los resultados
+            
             kpis = {
                 "entradas_vendidas": int(entradas),
                 "ingresos": float(ingresos),

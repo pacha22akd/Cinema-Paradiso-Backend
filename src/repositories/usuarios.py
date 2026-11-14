@@ -98,7 +98,7 @@ def crear_usuario(nombre, apellido, email, password_hash, telefono, rol_id):
     
     return nuevo_id
 
-#-----------------------------------------------
+
 def obtener_perfil_usuario(usuario_id):
     sql = text("""
         SELECT u.id, u.nombre, u.apellido, u.email, 
