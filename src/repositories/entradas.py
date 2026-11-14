@@ -5,7 +5,7 @@ def buscar_entrada_por_qr(codigo):
 
 
     query = """ 
-    SELECT e.id, e.funcion_id, e.estado, f.fecha_hora_inicio, f.estado AS estado_funcion,
+    SELECT e.id, e.compra_id, e.funcion_id, e.estado, f.fecha_hora_inicio, f.estado AS estado_funcion,
            p.titulo AS pelicula, s.nombre AS sala, b.fila, b.numero
     FROM entradas e 
     JOIN compras c on e.compra_id = c.id
@@ -27,14 +27,18 @@ def buscar_entrada_por_qr(codigo):
 
     return filas[0]
 
-def marcar_entrada_usada(id):
+def marcar_entrada_usada(id, compra_id):
 
     query = """ UPDATE entradas SET estado = 'usada', fecha_uso = NOW() WHERE id = :id AND estado = 'valida' """
+    query_compra = """ UPDATE compras SET estado = 'usada'
+    WHERE id = :compra_id AND estado = 'pagada'
+    AND (SELECT COUNT(*) FROM entradas WHERE compra_id = :compra_id AND estado = 'valida') = 0 """
 
-    valores = {"id": id}
+    valores = {"id": id, "compra_id": compra_id}
 
     conn = db.connect()
     resultado = conn.execute(text(query), valores)
+    conn.execute(text(query_compra), valores)
     conn.commit()
     filas = resultado.rowcount
     conn.close()
