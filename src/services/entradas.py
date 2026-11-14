@@ -32,9 +32,6 @@ def validar_qr(codigo):
 
     if entrada["fecha_hora_inicio"].date() != date.today():
         return {"valida": False, "motivo": "La entrada no es para el día de hoy", "estado_entrada": estado}
-
-    if entrada["fecha_hora_fin"].date() < date.today():
-        return {"valida": False, "motivo": "La función ya finalizó", "estado_entrada": estado}
     
     marcada = marcar_entrada_usada(entrada["id"])
 
