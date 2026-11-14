@@ -1,4 +1,3 @@
-
 from flask import Blueprint, jsonify, request
 from src.validators.funciones import validar_datos_funcion, validar_modificacion_funcion
 from src.utils.errores import devolver_error
@@ -13,8 +12,6 @@ from src.services.funciones import (
 
 funciones_bp = Blueprint('funciones', __name__)
 
-
-# Obtener disponibilidad de butacas
 @funciones_bp.route('/funciones/<int:funcion_id>/butacas', methods=['GET'])
 def get_butacas_funcion(funcion_id):
     try:
@@ -31,7 +28,6 @@ def get_butacas_funcion(funcion_id):
         return devolver_error(f"Error al obtener las butacas de la función: {str(e)}", 500)
 
 
-# Listar funciones (admin)
 @funciones_bp.route('/admin/funciones', methods=['GET'])
 @requiere_rol("administrador")
 def obtener_funciones():
@@ -43,7 +39,6 @@ def obtener_funciones():
     return jsonify(funciones), 200
 
 
-# Obtener una función por ID (admin)
 @funciones_bp.route('/admin/funciones/<int:id_funcion>', methods=['GET'])
 @requiere_rol("administrador")
 def obtener_funcion(id_funcion):
@@ -55,7 +50,6 @@ def obtener_funcion(id_funcion):
     return jsonify(funcion), 200
 
 
-# Crear una función (admin)
 @funciones_bp.route('/admin/funciones', methods=['POST'])
 @requiere_rol("administrador")
 def crear_funcion():
@@ -73,7 +67,6 @@ def crear_funcion():
     return jsonify({"mensaje": "Función creada correctamente"}), 201
 
 
-# Modificar una función (admin)
 @funciones_bp.route('/admin/funciones/<int:id_funcion>', methods=['PATCH'])
 @requiere_rol("administrador")
 def actualizar_funcion_por_id(id_funcion):

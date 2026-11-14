@@ -207,7 +207,6 @@ def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
 
 
 def enviar_mail_de_compra(id):
-    # Devuelve True si el mail salió y False si falló, sin cortar el proceso
     try:
         filas = compras.obtener_datos_mail(id)
         enviar_mail_compra(filas)
@@ -223,11 +222,10 @@ def pagar_compra(id, usuario_id):
     if error:
         return error
 
-    numero_factura = "FAC-" + str(id).zfill(6)  #.zfill llena con ceros a la izquierda. "FAC-" se inserta adelante.
+    numero_factura = "FAC-" + str(id).zfill(6)
 
     compras.pagar_compra(id, numero_factura)
 
-    # El mail va después de guardar el pago: si falla, la compra igual queda pagada
     email_enviado = enviar_mail_de_compra(id)
 
     return {"compra_id": id, "estado": "pagada", "numero_factura": numero_factura, "email_enviado": email_enviado}
