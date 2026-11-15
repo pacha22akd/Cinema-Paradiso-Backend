@@ -6,6 +6,7 @@ from src.validators.compras import validar_datos_compra, validar_servicio_en_com
 from src.repositories import compras
 from src.utils.errores import devolver_error
 from src.utils.mail import enviar_mail_compra
+from src.repositories import servicios as servicios_repo
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
    
@@ -209,9 +210,13 @@ def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
 def enviar_mail_de_compra(id):
     try:
         filas = compras.obtener_datos_mail(id)
-        enviar_mail_compra(filas)
+        servicios = servicios_repo.obtener_servicios_mail(id)
+
+        enviar_mail_compra(filas, servicios)
+
         compras.marcar_email_enviado(id)
         return True
+
     except Exception as e:
         print(f"No se pudo enviar el mail de la compra {id}: {e}")
         return False
@@ -240,3 +245,5 @@ def reenviar_mail_compra(id, usuario_id):
         return devolver_error("No se pudo enviar el mail. Intentá de nuevo más tarde.", 500)
 
     return {"compra_id": id, "email_enviado": True}
+
+

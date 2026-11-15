@@ -127,3 +127,62 @@ def eliminar_servicio(id):
     conn.close()
 
     return filas > 0
+
+def obtener_servicios_mail(compra_id):
+    query = """
+        SELECT servicios.nombre, compra_servicios.cantidad
+        FROM compra_servicios
+        JOIN servicios
+            ON compra_servicios.servicio_id = servicios.id
+        WHERE compra_servicios.compra_id = :id
+    """
+
+    conn = db.connect()
+    resultado = conn.execute(text(query), {"id": compra_id})
+    servicios = resultado.fetchall()
+    conn.close()
+
+    return servicios
+
+def obtener_compra_por_qr(codigo):
+
+    query = """
+        SELECT compras.id, compras.estado, compras.servicios_retirados
+        FROM compras
+        WHERE compras.qr_servicios_codigo = :codigo
+    """
+
+    conn = db.connect()
+    resultado = conn.execute(text(query), {"codigo": codigo}).fetchone()
+    conn.close()
+
+    return resultado
+
+def marcar_servicios_retirados(compra_id):
+
+    query = """
+        UPDATE compras
+        SET servicios_retirados = TRUE
+        WHERE id = :id
+        AND estado = 'pagada'
+        AND servicios_retirados = FALSE
+        AND EXISTS (
+            SELECT 1
+            FROM compra_servicios
+            WHERE compra_id = :id
+        )
+    """
+
+    conn = db.connect()
+
+    try:
+        resultado = conn.execute(text(query), {"id": compra_id})
+        conn.commit()
+        return resultado.rowcount == 1
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()

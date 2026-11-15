@@ -4,6 +4,7 @@ from src.utils.errores import devolver_error
 from src.utils.auth import requiere_auth
 from src.validators.compras import validar_id_compra
 
+
 compras_bp = Blueprint('compras', __name__)
 
 @compras_bp.route('/compras', methods=['POST'])
@@ -128,3 +129,6 @@ def post_reenviar_mail(id):
 
     except Exception as e:
         return devolver_error(str(e), 500)
+    
+
+

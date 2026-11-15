@@ -63,3 +63,17 @@ def consultar_entrada(id, usuario_id):
     entrada["fecha_hora_inicio"] = str(entrada["fecha_hora_inicio"])
 
     return entrada, 200
+
+def obtener_compra_por_qr(codigo):
+
+    query = """
+        SELECT compras.id, compras.estado, compras.servicios_retirados
+        FROM compras
+        WHERE compras.qr_servicios_codigo = :codigo
+    """
+
+    conn = db.connect()
+    resultado = conn.execute(text(query), {"codigo": codigo}).fetchone()
+    conn.close()
+
+    return resultado
