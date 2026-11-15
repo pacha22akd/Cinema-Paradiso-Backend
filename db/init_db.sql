@@ -109,6 +109,8 @@ CREATE TABLE IF NOT EXISTS compras (
     numero_factura      VARCHAR(50) UNIQUE,
     url_factura_pdf     VARCHAR(500),
     factura_enviada     BOOLEAN DEFAULT FALSE,
+    qr_servicios_codigo VARCHAR(100) UNIQUE,
+    servicios_retirados BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (funcion_id) REFERENCES funciones(id),
     UNIQUE (id, funcion_id)

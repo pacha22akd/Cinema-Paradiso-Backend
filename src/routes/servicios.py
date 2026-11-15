@@ -97,3 +97,26 @@ def get_servicios_adicionales():
 
     except Exception as e:
         return devolver_error(str(e), 500)
+
+
+
+@servicios_bp.route("/admin/servicios/validar_qr", methods=["POST"])
+@requiere_rol("administrador")
+def post_validar_qr_servicios():
+    try:
+        datos = request.get_json(silent=True)
+
+        if not isinstance(datos, dict):
+            return devolver_error("No se recibieron los datos del QR de servicios", 400)
+
+        codigo = datos.get("qr_codigo")
+
+        if not isinstance(codigo, str) or not codigo.strip():
+            return devolver_error("El código QR es obligatorio", 400)
+
+        resultado = servicios.validar_qr_servicios(codigo)
+
+        return jsonify(resultado), 200
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)

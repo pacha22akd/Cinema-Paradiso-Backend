@@ -7,18 +7,22 @@ def registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unit
         monto_total = len(butaca_ids) * precio_unitario
         
         codigo_compra = f"COMP-{uuid.uuid4().hex[:12].upper()}"
+        codigo_qr_servicios = f"QR-SERV-{uuid.uuid4().hex}"
 
         with db.begin() as conn:
             
             query_compra = text("""
-                INSERT INTO compras (usuario_id, funcion_id, codigo, total, estado)
-                VALUES (:usuario_id, :funcion_id, :codigo, :total, 'pendiente')
+                INSERT INTO compras
+                    (usuario_id, funcion_id, codigo, total, estado, qr_servicios_codigo)
+                VALUES
+                    (:usuario_id, :funcion_id, :codigo, :total, 'pendiente', :codigo_qr_servicios)
             """)
             resultado_compra = conn.execute(query_compra, {
                 "usuario_id": usuario_id,
                 "funcion_id": funcion_id,
                 "codigo": codigo_compra,
-                "total": monto_total
+                "total": monto_total,
+                "codigo_qr_servicios": codigo_qr_servicios
             })
             compra_id = resultado_compra.lastrowid
 
@@ -339,6 +343,7 @@ def pagar_compra(id, numero_factura):
 def obtener_datos_mail(compra_id):
     query = """
         SELECT u.email, u.nombre, c.total, c.numero_factura,
+               c.qr_servicios_codigo,
                e.qr_codigo, b.fila, b.numero, s.nombre AS sala,
                p.titulo AS pelicula, f.fecha_hora_inicio
         FROM compras c
@@ -350,10 +355,11 @@ def obtener_datos_mail(compra_id):
         JOIN peliculas p ON f.pelicula_id = p.id
         WHERE c.id = :id
     """
+
     with db.connect() as conn:
         return conn.execute(text(query), {"id": compra_id}).fetchall()
-
 
 def marcar_email_enviado(compra_id):
     with db.begin() as conn:
         conn.execute(text("UPDATE compras SET email_enviado = TRUE WHERE id = :id"), {"id": compra_id})
+
