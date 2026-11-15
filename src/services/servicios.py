@@ -48,10 +48,9 @@ def validar_qr_servicios(codigo):
 
     if compra is None:
         return {"valida": False, "motivo": "El código QR no existe"}
-
-    if compra.estado != "pagada":
+    if compra.estado not in ("pagada", "usada"):
         return {"valida": False, "motivo": "La compra no está pagada"}
-
+    
     if compra.servicios_retirados:
         return {"valida": False, "motivo": "Los servicios ya fueron retirados"}
 

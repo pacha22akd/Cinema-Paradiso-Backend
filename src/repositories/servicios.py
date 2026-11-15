@@ -164,7 +164,7 @@ def marcar_servicios_retirados(compra_id):
         UPDATE compras
         SET servicios_retirados = TRUE
         WHERE id = :id
-        AND estado = 'pagada'
+        AND estado IN ('pagada', 'usada')
         AND servicios_retirados = FALSE
         AND EXISTS (
             SELECT 1
