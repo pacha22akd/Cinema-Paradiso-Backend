@@ -191,7 +191,7 @@ def obtener_cancelaciones():
 
     return motivos
 
-def consultar_kpis_resumen():
+def consultar_estadisticas_relevantes_resumen():
    
     try:
         with db.connect() as conn:
@@ -237,15 +237,15 @@ def consultar_kpis_resumen():
             cancelaciones = res_cancelaciones.scalar() or 0
 
             
-            kpis = {
+            estadisticas_relevantes = {
                 "entradas_vendidas": int(entradas),
                 "ingresos": float(ingresos),
                 "ocupacion_media": float(ocupacion),
                 "total_cancelaciones": int(cancelaciones)
             }
 
-            return kpis
+            return estadisticas_relevantes
 
     except Exception as e:
-        print(f"Error al consultar los KPIs: {e}")
+        print(f"Error al consultar las estadísticas relevantes: {e}")
         return None

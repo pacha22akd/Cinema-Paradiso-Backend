@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from src.repositories.estadisticas import consultar_kpis_resumen
+from src.repositories.estadisticas import consultar_estadisticas_relevantes_resumen
 from src.utils.errores import devolver_error
 import src.validators.estadisticas as estadisticas_validator
 import src.services.estadisticas as estadisticas_service
@@ -88,13 +88,13 @@ def get_cancelaciones():
         return devolver_error(str(e), 500)
 
 
-@estadisticas_bp.route('/admin/estadisticas/kpis', methods=['GET'])
+@estadisticas_bp.route('/admin/estadisticas/estadisticas_relevantes', methods=['GET'])
 @requiere_rol("administrador")
-def obtener_kpis():
+def obtener_estadisticas_relevantes():
     try:
-        datos = consultar_kpis_resumen()
+        datos = consultar_estadisticas_relevantes_resumen()
         if datos is None:
-            return devolver_error("Error al calcular los KPIs", 500)
+            return devolver_error("Error al calcular las estadísticas relevantes", 500)
         return jsonify(datos), 200
     except Exception as e:
-        return devolver_error(f"Error inesperado al obtener KPIs: {str(e)}", 500)
+        return devolver_error(f"Error inesperado al obtener las estadísticas relevantes: {str(e)}", 500)
