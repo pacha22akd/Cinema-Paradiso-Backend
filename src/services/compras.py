@@ -6,6 +6,7 @@ from src.validators.compras import validar_datos_compra, validar_servicio_en_com
 from src.repositories import compras
 from src.utils.errores import devolver_error
 from src.utils.mail import enviar_mail_compra
+from src.repositories import servicios as servicios_repo
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
    
