@@ -10,23 +10,21 @@ from src.repositories import servicios as servicios_repo
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
    
-    error = validar_datos_compra(usuario_id, funcion_id, butaca_ids)
-    if error:
-        return error
+    validar_datos_compra(usuario_id, funcion_id, butaca_ids)
 
     funcion = obtener_funcion_por_id(funcion_id)
     if not funcion:
-        return {"error": "La función solicitada no existe", "status": 404}  
+        raise LookupError("La función solicitada no existe")
 
     if funcion["estado"] != "programada":
-        return {"error": "La función no está disponible para la venta", "status": 409}
+        raise RuntimeError("La función no está disponible para la venta")
     
     if funcion["ya_empezo"]:
-        return {"error": "La función ya comenzó o finalizó", "status": 409}
+        raise RuntimeError("La función ya comenzó o finalizó")
     
     butacas_sala = obtener_butacas_por_funcion(funcion_id, funcion["sala_id"])
     if butacas_sala is None:
-        return {"error": "No se pudo verificar la disponibilidad de las butacas", "status": 500}
+        raise Exception("No se pudo verificar la disponibilidad de las butacas")
 
     for b_id in butaca_ids:
         butaca_encontrada = None
@@ -35,16 +33,16 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
                 butaca_encontrada = butaca
 
         if butaca_encontrada is None:
-            return {"error": f"La butaca {b_id} no pertenece a la sala de esta función", "status": 400}
+            raise ValueError(f"La butaca {b_id} no pertenece a la sala de esta función")
 
         if butaca_encontrada["estado_disponibilidad"] == "ocupada":
-            return {"error": f"La butaca {b_id} ya está ocupada", "status": 409}
+            raise RuntimeError(f"La butaca {b_id} ya está ocupada")
 
     precio_unitario = funcion["precio_base"]
     resultado = registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario)
 
     if resultado is None:
-        return {"error": "No se pudo registrar la compra", "status": 500}
+        raise Exception("No se pudo registrar la compra")
 
     return resultado
 
@@ -196,16 +194,13 @@ def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
     compra = compras.buscar_compra(id)
 
     if compra is None:
-        return devolver_error("No existe la compra", 404)
+        raise LookupError("No existe la compra")
 
     if compra["usuario_id"] != usuario_id:
-        return devolver_error("La compra no pertenece al usuario", 403)
+        raise PermissionError("La compra no pertenece al usuario")
 
     if compra["estado"] != estado:
-        return devolver_error(mensaje_estado, 409)
-
-    return None
-
+        raise RuntimeError(mensaje_estado)
 
 def enviar_mail_de_compra(id):
     try:
@@ -223,9 +218,7 @@ def enviar_mail_de_compra(id):
 
 def pagar_compra(id, usuario_id):
 
-    error = validar_compra_del_usuario(id, usuario_id, "pendiente", "La compra no está pendiente de pago")
-    if error:
-        return error
+    validar_compra_del_usuario(id, usuario_id, "pendiente", "La compra no está pendiente de pago")
 
     numero_factura = "FAC-" + str(id).zfill(6)
 
@@ -237,12 +230,10 @@ def pagar_compra(id, usuario_id):
 
 def reenviar_mail_compra(id, usuario_id):
 
-    error = validar_compra_del_usuario(id, usuario_id, "pagada", "Solo se puede reenviar el mail de una compra pagada")
-    if error:
-        return error
+    validar_compra_del_usuario(id, usuario_id, "pagada", "Solo se puede reenviar el mail de una compra pagada")
 
     if not enviar_mail_de_compra(id):
-        return devolver_error("No se pudo enviar el mail. Intentá de nuevo más tarde.", 500)
+        raise Exception("No se pudo enviar el mail. Intentá de nuevo más tarde.")
 
     return {"compra_id": id, "email_enviado": True}
 
