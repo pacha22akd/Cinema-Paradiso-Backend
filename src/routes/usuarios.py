@@ -77,7 +77,7 @@ def get_perfil():
 
         return jsonify({
             "mensaje": "Perfil obtenido exitosamente",
-            **resultado
+            "data": resultado
         }), 200
 
     except PermissionError as e:

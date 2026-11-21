@@ -2,9 +2,6 @@ from sqlalchemy import text
 from src.utils.config import db
 
 def obtener_ocupacion_funciones():
-    """
-    Ejecuta la consulta SQL para calcular el porcentaje de ocupación por función.
-    """
     try:
         with db.connect() as conn:
             query = """
@@ -38,7 +35,6 @@ def obtener_ocupacion_funciones():
 
             ocupacion = [dict(zip(result.keys(), row)) for row in rows]
 
-            # Paso la fecha a texto en formato estándar (ej: "2026-12-10T18:00:00") para el JSON
             for fila in ocupacion:
                 fila["fecha_hora_inicio"] = fila["fecha_hora_inicio"].isoformat()
 
@@ -48,10 +44,6 @@ def obtener_ocupacion_funciones():
         return None
 
 def obtener_ocupacion_peliculas():
-    """
-    Ejecuta la consulta SQL para calcular el porcentaje de ocupación por película.
-    Primero agrupa por función (subconsulta) para no inflar los totales.
-    """
     try:
         with db.connect() as conn:
             query = """
@@ -89,7 +81,6 @@ def obtener_ocupacion_peliculas():
             result = conn.execute(text(query))
             rows = result.fetchall()
 
-            #Mapeo a lista de diccionarios con zip
             ocupacion = [dict(zip(result.keys(), row)) for row in rows]
 
             return ocupacion
@@ -99,9 +90,6 @@ def obtener_ocupacion_peliculas():
 
 
 def obtener_ocupacion_franjas_horarias():
-    """
-    Ejecuta la consulta SQL para agrupar y contar las entradas vendidas por franja horaria.
-    """
     try:
         with db.connect() as conn:
             query = """
@@ -192,60 +180,55 @@ def obtener_cancelaciones():
     return motivos
 
 def consultar_estadisticas_relevantes_resumen():
-   
-    try:
-        with db.connect() as conn:
-            
-            query_entradas = """
-                SELECT COUNT(id) AS total 
-                FROM entradas 
-                WHERE estado IN ('valida', 'usada')
-            """
-            res_entradas = conn.execute(text(query_entradas))
-            entradas = res_entradas.scalar() or 0
+
+    with db.connect() as conn:
+         
+        query_entradas = """
+         SELECT COUNT(id) AS total 
+         FROM entradas 
+         WHERE estado IN ('valida', 'usada')
+         """
+        res_entradas = conn.execute(text(query_entradas))
+        entradas = res_entradas.scalar() or 0
 
             
-            query_ingresos = """
-                SELECT SUM(total) AS total 
-                FROM compras 
-                WHERE estado IN ('pagada', 'usada')
-            """
-            res_ingresos = conn.execute(text(query_ingresos))
-            ingresos = res_ingresos.scalar() or 0.0
+        query_ingresos = """
+            SELECT SUM(total) AS total 
+            FROM compras 
+            WHERE estado IN ('pagada', 'usada')
+        """
+        res_ingresos = conn.execute(text(query_ingresos))
+        ingresos = res_ingresos.scalar() or 0.0
 
             
-            query_ocupacion = """
-                SELECT ROUND(AVG(porcentaje), 1) AS media
-                FROM (
-                    SELECT (COUNT(e.id) * 100.0 / s.capacidad) AS porcentaje
-                    FROM funciones f
-                    JOIN salas s ON f.sala_id = s.id
-                    LEFT JOIN entradas e ON f.id = e.funcion_id AND e.estado <> 'cancelada'
-                    GROUP BY f.id, s.capacidad
-                ) AS subquery
-            """
-            res_ocupacion = conn.execute(text(query_ocupacion))
-            ocupacion = res_ocupacion.scalar() or 0.0
+        query_ocupacion = """
+            SELECT ROUND(AVG(porcentaje), 1) AS media
+            FROM (
+                SELECT (COUNT(e.id) * 100.0 / s.capacidad) AS porcentaje
+                FROM funciones f
+                JOIN salas s ON f.sala_id = s.id
+                LEFT JOIN entradas e ON f.id = e.funcion_id AND e.estado <> 'cancelada'
+                GROUP BY f.id, s.capacidad
+            ) AS subquery
+        """
+        res_ocupacion = conn.execute(text(query_ocupacion))
+        ocupacion = res_ocupacion.scalar() or 0.0
 
             
-            query_cancelaciones = """
-                SELECT COUNT(id) AS total 
-                FROM compras 
-                WHERE estado = 'cancelada'
+        query_cancelaciones = """
+            SELECT COUNT(id) AS total 
+            FROM compras 
+            WHERE estado = 'cancelada'
             """
-            res_cancelaciones = conn.execute(text(query_cancelaciones))
-            cancelaciones = res_cancelaciones.scalar() or 0
+        res_cancelaciones = conn.execute(text(query_cancelaciones))
+        cancelaciones = res_cancelaciones.scalar() or 0
 
             
-            estadisticas_relevantes = {
-                "entradas_vendidas": int(entradas),
-                "ingresos": float(ingresos),
-                "ocupacion_media": float(ocupacion),
-                "total_cancelaciones": int(cancelaciones)
+        estadisticas_relevantes = {
+            "entradas_vendidas": int(entradas),
+            "ingresos": float(ingresos),
+            "ocupacion_media": float(ocupacion),
+            "total_cancelaciones": int(cancelaciones)
             }
 
-            return estadisticas_relevantes
-
-    except Exception as e:
-        print(f"Error al consultar las estadísticas relevantes: {e}")
-        return None
+        return estadisticas_relevantes

@@ -86,7 +86,6 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
     if not usuario_id:
         raise PermissionError("Usuario no autenticado")
 
-    # Parsear
     page        = _parse_int(page, "page", default=1)
     per_page    = _parse_int(per_page, "per_page", default=10)
     fecha_desde = _parse_datetime(fecha_desde, "fecha_desde")
@@ -111,7 +110,6 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
     offset = (page - 1) * per_page
     filas, total = compras.obtener_compras_usuario(usuario_id, filtros, offset, per_page)
 
-    #Formatear respuesta
     data = []
     for c in filas:
         fecha_f = c.fecha_hora_inicio.strftime("%Y-%m-%d") if c.fecha_hora_inicio else None
@@ -136,15 +134,15 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
             "cantidad_servicios": c.cantidad_servicios,
         })
 
-    return {
-        "data": data,
-        "meta": {
-            "total": total,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": (total + per_page - 1) // per_page if per_page else 0,
-        },
+    meta = {
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page if per_page else 0,
     }
+
+    return data, meta
+
 
 def cancelar_compra(id_compra, id_usuario, id_motivo):
     

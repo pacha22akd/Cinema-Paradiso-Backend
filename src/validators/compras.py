@@ -1,5 +1,4 @@
 def validar_datos_compra(usuario_id, funcion_id, butaca_ids):
-
     if not funcion_id or not butaca_ids:
         raise ValueError("Faltan datos: funcion_id y butaca_ids son obligatorios")
 
