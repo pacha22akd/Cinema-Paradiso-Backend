@@ -67,7 +67,6 @@ def validar_password(password: str):
         raise ValueError("La contraseña debe tener al menos 6 caracteres")
     
 def validar_registro_usuario(datos: dict):
-    """Agrupa todas las validaciones para el registro."""
     validar_email(datos.get('email'))
     validar_telefono(datos.get('telefono'))
     validar_password(datos.get('password'))

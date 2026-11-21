@@ -1,5 +1,4 @@
 def crear_respuesta_error(codigo: str, mensaje: str, descripcion: str)->dict:
-    """Devuelve la respuesta estándar de un error"""
     return {
         "errors": [{
             "code": codigo,
@@ -10,7 +9,6 @@ def crear_respuesta_error(codigo: str, mensaje: str, descripcion: str)->dict:
     }
 
 def devolver_error(descripcion: str, status_code: int)->tuple:
-    """Devuelve la respuesta del error (con la descripción recibida), la cual depende del status_code enviado"""
     if (status_code == 400):
         return crear_respuesta_error("ERROR_VALIDACION", "El cuerpo de la solicitud es inválido", descripcion), status_code
     elif (status_code == 401):

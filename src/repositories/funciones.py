@@ -4,9 +4,6 @@ from src.utils.config import db
 
 
 def obtener_funciones_por_pelicula(pelicula_id):
-    """
-    Obtiene todas las funciones vigentes de una película con datos de sala y local.
-    """
     try:
         with db.connect() as conn:
             query = text("""
@@ -48,9 +45,6 @@ def obtener_funciones_por_pelicula(pelicula_id):
 
 
 def obtener_funcion_por_id(id_funcion):
-    """
-    Obtiene una función por ID, incluyendo si ya comenzó.
-    """
     try:
         with db.connect() as conn:
             query = text("""
@@ -73,9 +67,6 @@ def obtener_funcion_por_id(id_funcion):
 
 
 def obtener_butacas_por_funcion(funcion_id, sala_id):
-    """
-    Obtiene las butacas y su disponibilidad para una función.
-    """
     try:
         with db.connect() as conn:
             query = text("""

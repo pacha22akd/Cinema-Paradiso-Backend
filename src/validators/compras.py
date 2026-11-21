@@ -1,8 +1,4 @@
 def validar_datos_compra(usuario_id, funcion_id, butaca_ids):
-    """
-    Valida el formato de los datos de la compra (sin consultar la base).
-    Devuelve un diccionario de error si algo está mal, o None si está todo bien.
-    """
     if not funcion_id or not butaca_ids:
         return {"error": "Faltan datos: funcion_id y butaca_ids son obligatorios", "status": 400}
 

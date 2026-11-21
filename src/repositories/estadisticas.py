@@ -2,9 +2,6 @@ from sqlalchemy import text
 from src.utils.config import db
 
 def obtener_ocupacion_funciones():
-    """
-    Ejecuta la consulta SQL para calcular el porcentaje de ocupación por función.
-    """
     try:
         with db.connect() as conn:
             query = """
@@ -38,7 +35,6 @@ def obtener_ocupacion_funciones():
 
             ocupacion = [dict(zip(result.keys(), row)) for row in rows]
 
-            # Paso la fecha a texto en formato estándar (ej: "2026-12-10T18:00:00") para el JSON
             for fila in ocupacion:
                 fila["fecha_hora_inicio"] = fila["fecha_hora_inicio"].isoformat()
 
@@ -48,10 +44,6 @@ def obtener_ocupacion_funciones():
         return None
 
 def obtener_ocupacion_peliculas():
-    """
-    Ejecuta la consulta SQL para calcular el porcentaje de ocupación por película.
-    Primero agrupa por función (subconsulta) para no inflar los totales.
-    """
     try:
         with db.connect() as conn:
             query = """
@@ -89,7 +81,6 @@ def obtener_ocupacion_peliculas():
             result = conn.execute(text(query))
             rows = result.fetchall()
 
-            #Mapeo a lista de diccionarios con zip
             ocupacion = [dict(zip(result.keys(), row)) for row in rows]
 
             return ocupacion
@@ -99,9 +90,6 @@ def obtener_ocupacion_peliculas():
 
 
 def obtener_ocupacion_franjas_horarias():
-    """
-    Ejecuta la consulta SQL para agrupar y contar las entradas vendidas por franja horaria.
-    """
     try:
         with db.connect() as conn:
             query = """
