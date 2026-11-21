@@ -1,17 +1,15 @@
 def validar_datos_compra(usuario_id, funcion_id, butaca_ids):
     if not funcion_id or not butaca_ids:
-        return {"error": "Faltan datos: funcion_id y butaca_ids son obligatorios", "status": 400}
+        raise ValueError("Faltan datos: funcion_id y butaca_ids son obligatorios")
 
     if not isinstance(butaca_ids, list) or len(butaca_ids) == 0:
-        return {"error": "butaca_ids debe ser una lista con al menos una butaca", "status": 400}
+        raise ValueError("butaca_ids debe ser una lista con al menos una butaca")
 
     butacas_vistas = []
     for b_id in butaca_ids:
         if b_id in butacas_vistas:
-            return {"error": "Hay butacas repetidas en la solicitud", "status": 400}
+            raise ValueError("Hay butacas repetidas en la solicitud")
         butacas_vistas.append(b_id)
-
-    return None
 
 def validar_id_compra(id_compra):
 

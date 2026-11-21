@@ -22,15 +22,18 @@ def crear_compra():
 
         resultado = compras.realizar_proceso_compra(usuario_id, funcion_id, butaca_ids)
 
-        if "error" in resultado:
-            return devolver_error(resultado["error"], resultado["status"])
-
         return jsonify({
             "mensaje": "Compra realizada con éxito",
             "compra_id": resultado["compra_id"],
             "codigo": resultado["codigo_compra"],
             "monto_total": resultado["monto_total"]
         }), 201
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
 
     except Exception:
         return devolver_error("No se pudo procesar la compra", 500)
@@ -118,6 +121,12 @@ def post_pagar_compra(id):
 
     try:
         return compras.pagar_compra(id, g.usuario_id)
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+    except PermissionError as e:
+        return devolver_error(str(e), 403)
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
 
     except Exception as e:
         return devolver_error(str(e), 500)
@@ -127,6 +136,12 @@ def post_pagar_compra(id):
 def post_reenviar_mail(id):
     try:
         return compras.reenviar_mail_compra(id, g.usuario_id)
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+    except PermissionError as e:
+        return devolver_error(str(e), 403)
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
 
     except Exception as e:
         return devolver_error(str(e), 500)
