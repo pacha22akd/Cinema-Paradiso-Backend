@@ -10,14 +10,14 @@ from src.utils.errores import devolver_error
 
 def iniciar_sesion(email, password):
     if not email or not password:
-        return devolver_error("Email y contraseña son obligatorios", 400)
+        raise ValueError("Email y contraseña son obligatorios")
 
     usuario = usuarios.obtener_usuario_por_email(email)
     if not usuario:
-        return devolver_error("Credenciales inválidas", 401)
+        raise PermissionError("Credenciales inválidas")
 
     if not check_password_hash(usuario.password_hash, password):
-        return devolver_error("Credenciales inválidas", 401)
+        raise PermissionError("Credenciales inválidas")
 
     token = jwt.encode(
         {
@@ -38,6 +38,6 @@ def iniciar_sesion(email, password):
             "rol": usuario.rol,
         },
         "token": token,
-    }, 200
+    }
 
 

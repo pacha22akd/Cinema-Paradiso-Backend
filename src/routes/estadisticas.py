@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from src.repositories.estadisticas import consultar_estadisticas_relevantes_resumen
 from src.utils.errores import devolver_error
 import src.validators.estadisticas as estadisticas_validator
@@ -93,8 +93,8 @@ def get_cancelaciones():
 def obtener_estadisticas_relevantes():
     try:
         datos = consultar_estadisticas_relevantes_resumen()
-        if datos is None:
-            return devolver_error("Error al calcular las estadísticas relevantes", 500)
+        
         return jsonify(datos), 200
-    except Exception as e:
-        return devolver_error(f"Error inesperado al obtener las estadísticas relevantes: {str(e)}", 500)
+    except Exception:
+        current_app.logger.exception("Error al obetener las estadisticas relevantes")
+        return devolver_error("Error inesperado al obtener las estadísticas relevantes", 500)

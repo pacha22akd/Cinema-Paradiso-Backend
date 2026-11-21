@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app, jsonify
 
 from src.services import sesiones
 from src.utils.errores import devolver_error
@@ -12,15 +12,22 @@ def iniciar_sesion():
     if not datos:
         return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
 
-    respuesta, status = sesiones.iniciar_sesion(
-        datos.get("email"),
-        datos.get("password"),   
-    )
+    
+    try:
+        respuesta = sesiones.iniciar_sesion(
+            datos.get("email"),
+            datos.get("password"),   
+        )
 
-    if status == 200:
-        respuesta = {
+    except ValueError as e:
+        return devolver_error(str(e),400)
+    except PermissionError as e:
+        return devolver_error(str(e),401)
+    except Exception:
+        current_app.logger.exception("error al iniciar sesion")
+        return devolver_error("Ocurrio un error al iniciar sesion",500)
+
+    return jsonify({
             "mensaje": "Sesión iniciada correctamente",
-            **respuesta,
-        }
-
-    return respuesta, status
+            "data": respuesta
+        })
