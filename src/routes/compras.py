@@ -42,12 +42,12 @@ def get_compra(id):
     try:
         resultado = compras.obtener_compra(id, g.usuario_id)
 
-        if "error" in resultado:
-            return devolver_error(resultado["error"], resultado["status"])
-
         return jsonify(resultado), 200
 
-    except Exception:
+    except ValueError as e:
+        return devolver_error(str(e), 404)
+
+    except Exception as e:
         return devolver_error("No se pudo obtener la compra", 500)
 
 

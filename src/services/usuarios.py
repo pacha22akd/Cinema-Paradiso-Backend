@@ -22,15 +22,15 @@ def registrar_usuario(datos):
     try:
         validar_registro_usuario(datos)
     except ValueError as e:
-        return {"error": str(e), "status": 400}
+        raise ValueError(str(e)) 
 
     email = datos.get('email')
     if usuarios.obtener_usuario_por_email(email):
-        return {"error": "El email ya está registrado en el sistema", "status": 409}
+        raise ValueError("El email ya está registrado en el sistema")
 
     rol_id = usuarios.obtener_rol_id_por_nombre('cliente')
     if not rol_id:
-        return {"error": "Error interno: El rol 'cliente' no está configurado", "status": 500}
+        raise Exception("Error interno: El rol 'cliente' no está configurado")
 
     password = datos.get('password')
     password_hash = generate_password_hash(password)
@@ -50,7 +50,7 @@ def registrar_usuario(datos):
             rol_id=rol_id
         )
     except Exception as e:
-        return {"error": f"Error al guardar en base de datos: {str(e)}", "status": 500}
+        raise RuntimeError(f"Error al guardar en base de datos: {str(e)}")
 
     return {
         'id': nuevo_usuario_id,
@@ -60,6 +60,7 @@ def registrar_usuario(datos):
         'telefono': telefono,
         'rol_id': rol_id
     }
+
 
 def obtener_perfil_usuario(usuario_id):
     if not usuario_id:
