@@ -117,6 +117,12 @@ def post_pagar_compra(id):
 
     try:
         return compras.pagar_compra(id, g.usuario_id)
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+    except PermissionError as e:
+        return devolver_error(str(e), 403)
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
 
     except Exception as e:
         return devolver_error(str(e), 500)
@@ -126,6 +132,12 @@ def post_pagar_compra(id):
 def post_reenviar_mail(id):
     try:
         return compras.reenviar_mail_compra(id, g.usuario_id)
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+    except PermissionError as e:
+        return devolver_error(str(e), 403)
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
 
     except Exception as e:
         return devolver_error(str(e), 500)
