@@ -30,4 +30,4 @@ def iniciar_sesion():
     return jsonify({
             "mensaje": "Sesión iniciada correctamente",
             "data": respuesta
-        })
+        }), 200

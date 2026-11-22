@@ -131,11 +131,7 @@ def obtener_compra_por_id(id_compra, usuario_id):
     return compra
 
 def obtener_compras_usuario(usuario_id, filtros, offset, limit):
-    """
-    Devuelve (filas, total) con las compras del usuario autenticado.
-    filtros: dict con claves opcionales ya validadas por el service:
-        estado, fecha_desde, fecha_hasta
-    """
+    
     condiciones = ["c.usuario_id = :usuario_id"]
     params = {"usuario_id": usuario_id}
 

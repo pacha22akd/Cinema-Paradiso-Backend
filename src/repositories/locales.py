@@ -13,3 +13,5 @@ def obtener_locales():
     except Exception as e:
         print(f"Error al obtener locales: {e}")
         return None
+
+    
