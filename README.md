@@ -15,8 +15,7 @@ Este repositorio contiene el Backend de la aplicación web **Cine Paradiso**, de
 
 El proyecto fue desarrollado utilizando las siguientes librerías y herramientas:
 
-*   **Flask (v3.1.3)** 
-*   **Flask-SQLAlchemy (v3.1.1)**
+*   **Flask (v3.1.3)**
 *   **SQLAlchemy (v2.0.53)** 
 *   **mysql-connector-python (v26.7.0)** 
 *   **PyJWT (v2.15.1)** 
