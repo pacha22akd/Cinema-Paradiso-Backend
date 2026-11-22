@@ -83,8 +83,7 @@ def _parse_datetime(valor, campo):
 def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
                            fecha_hasta=None, page=None, per_page=None):
     
-    if not usuario_id:
-        raise PermissionError("Usuario no autenticado")
+    
 
     page        = _parse_int(page, "page", default=1)
     per_page    = _parse_int(per_page, "per_page", default=10)

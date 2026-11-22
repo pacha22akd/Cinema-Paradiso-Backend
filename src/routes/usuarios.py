@@ -49,8 +49,6 @@ def modificar_perfil():
 def post_usuario():
     datos = request.get_json()
 
-    if not datos:
-        return devolver_error("No se enviaron datos", 400)
 
     try:
         resultado = usuarios.registrar_usuario(datos)

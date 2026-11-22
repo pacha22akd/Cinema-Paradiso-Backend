@@ -63,8 +63,7 @@ def registrar_usuario(datos):
 
 
 def obtener_perfil_usuario(usuario_id):
-    if not usuario_id:
-        raise PermissionError("Usuario no autenticado")
+   
 
     perfil_db = usuarios.obtener_perfil_usuario(usuario_id)
     if not perfil_db:
