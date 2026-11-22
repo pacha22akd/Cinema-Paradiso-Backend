@@ -25,9 +25,11 @@ def post_validar_qr():
 @entradas_bp.route("/entradas/<int:id>", methods=["GET"])
 @requiere_auth
 def get_entrada(id):
-
     try:
-        return entradas.consultar_entrada(id, g.usuario_id)
+        return entradas.consultar_entrada(id, g.usuario_id), 200
+
+    except LookupError as e:
+        return devolver_error(str(e), 404)
 
     except Exception:
         return devolver_error("No se pudo obtener la entrada", 500)

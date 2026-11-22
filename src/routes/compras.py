@@ -87,11 +87,21 @@ def listar_compras():
 def cancelar_compra_por_id(id_compra):
     valido, error = validar_id_compra(id_compra)
     if not valido:
-        return jsonify({"error": error}), 400
-    datos = request.get_json(silent=True) or {}
-    motivo = datos.get("motivo")
-    respuesta, codigo = compras.cancelar_compra(id_compra, g.usuario_id, motivo)
-    return jsonify(respuesta), codigo
+        return devolver_error(error, 400)
+    try:
+        datos = request.get_json(silent=True) or {}
+        motivo = datos.get("motivo")
+        respuesta = compras.cancelar_compra(id_compra, g.usuario_id, motivo)
+        return jsonify(respuesta), 200
+    
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
+
+    except Exception:
+        return devolver_error("No se pudo cancelar la compra", 500)
 
 @compras_bp.route("/compras/<int:id>/servicios", methods=["POST"])
 @requiere_auth
@@ -102,15 +112,26 @@ def post_servicio_a_compra(id):
         if not isinstance(datos, dict):
             return devolver_error("No se recibieron los datos del servicio", 400)
 
-        return compras.agregar_servicio_a_compra(
+        resultado = compras.agregar_servicio_a_compra(
             id,
             datos.get("servicio_id"),
             datos.get("cantidad"),
             g.usuario_id
         )
 
+        return jsonify(resultado), 201
+
     except ValueError as e:
         return devolver_error(str(e), 400)
+
+    except LookupError as e:
+        return devolver_error(str(e), 404)
+
+    except PermissionError as e:
+        return devolver_error(str(e), 403)
+
+    except RuntimeError as e:
+        return devolver_error(str(e), 409)
 
     except Exception:
         return devolver_error("Error interno al agregar el servicio", 500)

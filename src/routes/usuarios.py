@@ -1,9 +1,7 @@
 from flask import Blueprint, request, jsonify, g, current_app
 import src.validators.usuarios as usuarios_validator
 import src.services.usuarios as usuarios_service
-import src.utils.errores as errores
 import src.utils.auth as auth
-from src.services import usuarios
 from src.utils.errores import devolver_error
 
 usuarios_bp = Blueprint("usuarios", __name__)
@@ -20,7 +18,7 @@ def modificar_perfil():
     es_valido, perfil, descripcion_error = usuarios_validator.validar_modificacion_perfil(datos)
 
     if not es_valido:
-        return errores.devolver_error(descripcion_error, 400)
+        return devolver_error(descripcion_error, 400)
 
     try:
         perfil_actualizado = usuarios_service.modificar_perfil(
@@ -28,35 +26,30 @@ def modificar_perfil():
         )
 
         if perfil_actualizado is None:
-            return errores.devolver_error("El usuario no existe", 404)
+            return devolver_error("El usuario no existe", 404)
 
         if perfil_actualizado == "email_duplicado":
-            return errores.devolver_error("El email ya se encuentra registrado", 409)
+            return devolver_error("El email ya se encuentra registrado", 409)
 
         if perfil_actualizado == "campo_no_permitido":
-            return errores.devolver_error("Campo no permitido", 400)
+            return devolver_error("Campo no permitido", 400)
 
         if perfil_actualizado == "error_bd":
-            return errores.devolver_error("No se pudo modificar el perfil", 500)
+            return devolver_error("No se pudo modificar el perfil", 500)
 
         return jsonify(perfil_actualizado), 200
 
     except Exception:
-        return errores.devolver_error("No se pudo modificar el perfil", 500)
+        return devolver_error("No se pudo modificar el perfil", 500)
 
 
 @usuarios_bp.route("/usuarios", methods=["POST"])
 def post_usuario():
     datos = request.get_json()
-
-
     try:
-        resultado = usuarios.registrar_usuario(datos)
+        resultado = usuarios_service.registrar_usuario(datos)
 
-        return jsonify({
-            'mensaje': 'Usuario registrado exitosamente',
-            'usuario': resultado
-        }), 201
+        return jsonify({'mensaje': 'Usuario registrado exitosamente','usuario': resultado}), 201
 
     except ValueError as e:
         mensaje = str(e)
@@ -73,19 +66,13 @@ def get_perfil():
     try:
         resultado = usuarios_service.obtener_perfil_usuario(g.usuario_id)
 
-        return jsonify({
-            "mensaje": "Perfil obtenido exitosamente",
-            "data": resultado
-        }), 200
+        return jsonify({"mensaje": "Perfil obtenido exitosamente", "data": resultado}), 200
 
     except PermissionError as e:
-        return errores.devolver_error(str(e), 401)
+        return devolver_error(str(e), 401)
     except LookupError as e:
-        return errores.devolver_error(str(e), 404)
+        return devolver_error(str(e), 404)
     except Exception:
         current_app.logger.exception("Error al obtener el perfil del usuario")
-        return errores.devolver_error(
-            "Ocurrió un error inesperado al obtener el perfil",
-            500
-        )
+        return devolver_error("Ocurrió un error inesperado al obtener el perfil", 500)
 

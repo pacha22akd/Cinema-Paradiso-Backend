@@ -11,9 +11,7 @@ def modificar_perfil(id_usuario, datos):
         password_hash = generate_password_hash(password)
         datos_actualizados["password_hash"] = password_hash
 
-    perfil = usuarios.actualizar_perfil(
-        id_usuario, datos_actualizados
-    )
+    perfil = usuarios.actualizar_perfil(id_usuario, datos_actualizados)
 
     return perfil
 

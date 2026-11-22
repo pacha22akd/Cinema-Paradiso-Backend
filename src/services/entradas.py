@@ -1,7 +1,6 @@
 from datetime import date
 from src.repositories.entradas import buscar_entrada_por_qr, marcar_entrada_usada, obtener_entrada
 from src.validators.entradas import validar_datos_qr
-from src.utils.errores import devolver_error
 
 def validar_qr(codigo):
 
@@ -58,8 +57,8 @@ def consultar_entrada(id, usuario_id):
     entrada = obtener_entrada(id, usuario_id)
 
     if entrada is None:
-        return devolver_error("No existe la entrada buscada", 404)
+        raise LookupError("No existe la entrada buscada")
 
     entrada["fecha_hora_inicio"] = str(entrada["fecha_hora_inicio"])
 
-    return entrada, 200
+    return entrada

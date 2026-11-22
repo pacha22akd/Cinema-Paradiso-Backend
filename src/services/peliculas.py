@@ -1,8 +1,8 @@
 import os
 import requests
 from dotenv import load_dotenv
-import src.repositories.peliculas as peliculas_rep
-from src.repositories.peliculas import obtener_pelicula_por_id, obtener_peliculas_cartelera
+from src.repositories.peliculas import (obtener_pelicula_por_id, obtener_peliculas_cartelera, obtener_peliculas, actualizar_pelicula, insertar_pelicula, eliminar_pelicula)
+
 load_dotenv()
 
 def buscar_pelicula_por_id(pelicula_id):
@@ -13,7 +13,7 @@ def listar_peliculas_cartelera(genero=None, titulo=None):
 
 def listar_peliculas(titulo=None, genero=None) -> list:
 
-    peliculas = peliculas_rep.obtener_peliculas(titulo, genero)
+    peliculas = obtener_peliculas(titulo, genero)
 
     return peliculas
 
@@ -85,15 +85,13 @@ def buscar_pelicula_externa(titulo, anio=None):
 
 def modificar_pelicula(id_pelicula, datos):
 
-    pelicula = peliculas_rep.actualizar_pelicula(
-        id_pelicula, datos
-    )
+    pelicula = actualizar_pelicula(id_pelicula, datos)
 
     return pelicula
 
 def crear_pelicula(datos):
 
-    id_pelicula = peliculas_rep.insertar_pelicula(datos)
+    id_pelicula = insertar_pelicula(datos)
 
     pelicula = datos.copy()
     pelicula["id"] = id_pelicula
@@ -103,6 +101,6 @@ def crear_pelicula(datos):
 
 def borrar_pelicula(id_pelicula):
 
-    resultado = peliculas_rep.eliminar_pelicula(id_pelicula)
+    resultado = eliminar_pelicula(id_pelicula)
 
     return resultado

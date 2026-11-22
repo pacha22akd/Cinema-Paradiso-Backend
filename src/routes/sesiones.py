@@ -1,5 +1,4 @@
 from flask import Blueprint, request, current_app, jsonify
-
 from src.services import sesiones
 from src.utils.errores import devolver_error
 
@@ -12,7 +11,6 @@ def iniciar_sesion():
     if not datos:
         return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
 
-    
     try:
         respuesta = sesiones.iniciar_sesion(
             datos.get("email"),

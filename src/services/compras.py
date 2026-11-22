@@ -1,12 +1,9 @@
 from datetime import datetime
-from src.repositories.compras import cancelar_compra_en_bd
+from src.repositories.compras import (cancelar_compra_en_bd, agregar_servicio_compra, registrar_compra_transaccion, obtener_compra_por_id, obtener_compras_usuario, buscar_compra, obtener_datos_mail, marcar_email_enviado, pagar_compra, )
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
-from src.repositories.compras import registrar_compra_transaccion
 from src.validators.compras import validar_datos_compra, validar_servicio_en_compra
-from src.repositories import compras
-from src.utils.errores import devolver_error
 from src.utils.mail import enviar_mail_compra
-from src.repositories import servicios as servicios_repo
+from src.repositories.servicios import obtener_servicios_mail
 
 def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
    
@@ -47,7 +44,7 @@ def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
     return resultado
 
 def obtener_compra(id_compra, usuario_id):
-    compra = compras.obtener_compra_por_id(id_compra, usuario_id)
+    compra = obtener_compra_por_id(id_compra, usuario_id)
 
     if compra is None:
         raise ValueError("No existe la compra buscada")
@@ -107,7 +104,7 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
         "fecha_hasta": fecha_hasta,
     }
     offset = (page - 1) * per_page
-    filas, total = compras.obtener_compras_usuario(usuario_id, filtros, offset, per_page)
+    filas, total = obtener_compras_usuario(usuario_id, filtros, offset, per_page)
 
     data = []
     for c in filas:
@@ -144,40 +141,39 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
 
 
 def cancelar_compra(id_compra, id_usuario, id_motivo):
-    
+
     resultado = cancelar_compra_en_bd(id_compra, id_usuario, id_motivo)
 
     if resultado == "no_existe":
-        return {"error": "Compra no encontrada"}, 404
+        raise LookupError("Compra no encontrada")
 
     if resultado == "no_cancelable":
-        return {"error": "La compra no se puede cancelar"}, 409
+        raise RuntimeError("La compra no se puede cancelar")
 
     if resultado == "fuera_de_plazo":
-        return {"error": "Solo se puede cancelar hasta 2 horas antes de la función"}, 409
+        raise RuntimeError("Solo se puede cancelar hasta 2 horas antes de la función")
 
-    return {"mensaje": "Compra cancelada correctamente"}, 200
-
+    return {"mensaje": "Compra cancelada correctamente"}
 
 def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
 
     servicio_id, cantidad = validar_servicio_en_compra(servicio_id, cantidad)
 
-    compra = compras.buscar_compra(compra_id)
+    compra = buscar_compra(compra_id)
 
     if compra is None:
-        return devolver_error("No existe la compra", 404)
-    
+        raise LookupError("No existe la compra")
+
     if compra["usuario_id"] != usuario_id:
-        return devolver_error("La compra no pertenece al usuario", 403)
+        raise PermissionError("La compra no pertenece al usuario")
 
     if compra["estado"] != "pendiente":
-        return devolver_error("Solo se pueden agregar servicios a una compra pendiente", 409)
+        raise RuntimeError("Solo se pueden agregar servicios a una compra pendiente")
 
-    resultado = compras.agregar_servicio_a_compra(compra_id, servicio_id, cantidad)
+    resultado = agregar_servicio_compra(compra_id, servicio_id, cantidad)
 
     if resultado == "no_existe":
-        return devolver_error("No existe el servicio", 404)
+        raise LookupError("No existe el servicio")
 
     return {
         "compra_id": compra_id,
@@ -185,10 +181,10 @@ def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
         "cantidad": cantidad,
         "precio_unitario": resultado["precio_unitario"],
         "subtotal": resultado["subtotal"],
-    }, 201
+    }
 
 def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
-    compra = compras.buscar_compra(id)
+    compra = buscar_compra(id)
 
     if compra is None:
         raise LookupError("No existe la compra")
@@ -201,12 +197,12 @@ def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
 
 def enviar_mail_de_compra(id):
     try:
-        filas = compras.obtener_datos_mail(id)
-        servicios = servicios_repo.obtener_servicios_mail(id)
+        filas = obtener_datos_mail(id)
+        servicios = obtener_servicios_mail(id)
 
         enviar_mail_compra(filas, servicios)
 
-        compras.marcar_email_enviado(id)
+        marcar_email_enviado(id)
         return True
 
     except Exception as e:
@@ -219,7 +215,7 @@ def pagar_compra(id, usuario_id):
 
     numero_factura = "FAC-" + str(id).zfill(6)
 
-    compras.pagar_compra(id, numero_factura)
+    pagar_compra(id, numero_factura)
 
     email_enviado = enviar_mail_de_compra(id)
 

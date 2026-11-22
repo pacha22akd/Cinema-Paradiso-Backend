@@ -1,4 +1,3 @@
-
 from src.repositories.funciones import (
     obtener_funciones_por_pelicula,
     obtener_funcion_por_id,

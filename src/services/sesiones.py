@@ -1,18 +1,15 @@
 from datetime import datetime, timedelta, timezone
-
 import jwt
 from flask import current_app
 from werkzeug.security import check_password_hash
-
-from src.repositories import usuarios
-from src.utils.errores import devolver_error
+from src.repositories.usuarios import obtener_usuario_por_email
 
 
 def iniciar_sesion(email, password):
     if not email or not password:
         raise ValueError("Email y contraseña son obligatorios")
 
-    usuario = usuarios.obtener_usuario_por_email(email)
+    usuario = obtener_usuario_por_email(email)
     if not usuario:
         raise PermissionError("Credenciales inválidas")
 

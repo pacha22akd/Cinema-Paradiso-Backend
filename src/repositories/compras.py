@@ -284,7 +284,7 @@ def buscar_compra(id):
 
     return compras[0]
 
-def agregar_servicio_a_compra(compra_id, servicio_id, cantidad):
+def agregar_servicio_compra(compra_id, servicio_id, cantidad):
 
     select_query = "SELECT precio FROM servicios WHERE id = :servicio_id"
     insert_query = """ INSERT INTO compra_servicios (compra_id, servicio_id, cantidad, precio_unitario, subtotal)
