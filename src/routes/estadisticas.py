@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from src.repositories.estadisticas import consultar_estadisticas_relevantes_resumen
 from src.utils.errores import devolver_error
-import src.validators.estadisticas as estadisticas_validator
 from src.utils.auth import requiere_rol
 from src.services.estadisticas import (
     listar_ocupacion_funciones,
@@ -56,21 +55,14 @@ def obtener_franjas_horarias():
 @estadisticas_bp.route("/admin/estadisticas/ventas_genero", methods=["GET"])
 @requiere_rol("administrador")
 def obtener_ventas_genero():
-
-    fecha_desde = request.args.get("fecha_desde")
-    fecha_hasta = request.args.get("fecha_hasta")
-
-    es_valido, fecha_desde, fecha_hasta, descripcion_error = estadisticas_validator.validar_fechas_ventas(fecha_desde, fecha_hasta, request.args)
-
-    if not es_valido:
-        return devolver_error(descripcion_error, 400)
-
+    parametros = request.args.to_dict(flat=False)
     try:
-        estadisticas = consultar_ventas_genero(
-            fecha_desde, fecha_hasta
-        )
+        estadisticas = consultar_ventas_genero(parametros)
 
         return jsonify(estadisticas), 200
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
 
     except Exception:
         return devolver_error("No se pudieron obtener las ventas por genero", 500)
