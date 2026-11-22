@@ -120,3 +120,6 @@ def post_validar_qr_servicios():
 
     except ValueError as e:
         return devolver_error(str(e), 400)
+
+    except Exception:
+        return devolver_error("No se pudo validar el QR de servicios", 500)

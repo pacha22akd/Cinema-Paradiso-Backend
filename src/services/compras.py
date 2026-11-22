@@ -209,7 +209,7 @@ def enviar_mail_de_compra(id):
         print(f"No se pudo enviar el mail de la compra {id}: {e}")
         return False
 
-def pagar_compra(id, usuario_id):
+def pagar_compra_id(id, usuario_id):
 
     validar_compra_del_usuario(id, usuario_id, "pendiente", "La compra no está pendiente de pago")
 

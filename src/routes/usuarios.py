@@ -43,12 +43,13 @@ def modificar_perfil():
         return devolver_error("No se pudo modificar el perfil", 500)
 
 
-@usuarios_bp.route("/usuarios", methods=["POST"])
 def post_usuario():
-    datos = request.get_json()
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return devolver_error("No se enviaron datos", 400)
+
     try:
         resultado = usuarios_service.registrar_usuario(datos)
-
         return jsonify({'mensaje': 'Usuario registrado exitosamente','usuario': resultado}), 201
 
     except ValueError as e:

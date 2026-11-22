@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from src.services.peliculas import (buscar_pelicula_por_id, listar_peliculas_cartelera, listar_peliculas, buscar_pelicula_externa, modificar_pelicula, crear_pelicula, borrar_pelicula)
+from src.services.peliculas import (buscar_pelicula_por_id, listar_peliculas_cartelera, listar_peliculas, buscar_pelicula_externa, modificar_pelicula_id, crear_pelicula, borrar_pelicula)
 from src.services.funciones import listar_funciones_por_pelicula
 from src.utils.errores import devolver_error
 import src.validators.peliculas as peliculas_validator
@@ -111,9 +111,7 @@ def modificar_pelicula(id_pelicula):
             return devolver_error(descripcion_error, 400)
     
     try:
-        pelicula_actualizada = modificar_pelicula(
-            id_pelicula, pelicula
-        )
+        pelicula_actualizada = modificar_pelicula_id(id_pelicula, pelicula)
 
         if pelicula_actualizada is None:
             return devolver_error("La pelicula no existe", 404)

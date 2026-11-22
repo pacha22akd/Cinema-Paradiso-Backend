@@ -83,7 +83,7 @@ def buscar_pelicula_externa(titulo, anio=None):
 
     return pelicula
 
-def modificar_pelicula(id_pelicula, datos):
+def modificar_pelicula_id(id_pelicula, datos):
 
     pelicula = actualizar_pelicula(id_pelicula, datos)
 

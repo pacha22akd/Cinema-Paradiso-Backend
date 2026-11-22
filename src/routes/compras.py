@@ -141,7 +141,7 @@ def post_servicio_a_compra(id):
 def post_pagar_compra(id):
 
     try:
-        return compras.pagar_compra(id, g.usuario_id)
+        return compras.pagar_compra_id(id, g.usuario_id)
     except LookupError as e:
         return devolver_error(str(e), 404)
     except PermissionError as e:
