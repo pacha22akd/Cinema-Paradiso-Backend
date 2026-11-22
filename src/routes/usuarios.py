@@ -42,7 +42,7 @@ def modificar_perfil():
     except Exception:
         return devolver_error("No se pudo modificar el perfil", 500)
 
-
+@usuarios_bp.route("/usuarios", methods=["POST"])
 def post_usuario():
     datos = request.get_json(silent=True)
     if not isinstance(datos, dict):
