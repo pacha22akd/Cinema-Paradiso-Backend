@@ -1,0 +1,192 @@
+from datetime import datetime
+from src.repositories.compras import (cancelar_compra_en_bd, agregar_servicio_compra, registrar_compra_transaccion, obtener_compra_por_id, obtener_compras_usuario, buscar_compra, obtener_datos_mail, marcar_email_enviado, pagar_compra, )
+from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
+from src.validators.compras import validar_datos_compra, validar_servicio_en_compra, convertir_a_entero_con_default
+from src.utils.mail import enviar_mail_compra
+from src.repositories.servicios import obtener_servicios_mail
+
+def realizar_proceso_compra(usuario_id, funcion_id, butaca_ids):
+   
+    validar_datos_compra(usuario_id, funcion_id, butaca_ids)
+
+    funcion = obtener_funcion_por_id(funcion_id)
+    if not funcion:
+        raise LookupError("La función solicitada no existe")
+
+    if funcion["estado"] != "programada":
+        raise RuntimeError("La función no está disponible para la venta")
+    
+    if funcion["ya_empezo"]:
+        raise RuntimeError("La función ya comenzó o finalizó")
+    
+    butacas_sala = obtener_butacas_por_funcion(funcion_id, funcion["sala_id"])
+    if butacas_sala is None:
+        raise Exception("No se pudo verificar la disponibilidad de las butacas")
+
+    for b_id in butaca_ids:
+        butaca_encontrada = None
+        for butaca in butacas_sala:
+            if butaca["butaca_id"] == b_id:
+                butaca_encontrada = butaca
+
+        if butaca_encontrada is None:
+            raise ValueError(f"La butaca {b_id} no pertenece a la sala de esta función")
+
+        if butaca_encontrada["estado_disponibilidad"] == "ocupada":
+            raise RuntimeError(f"La butaca {b_id} ya está ocupada")
+
+    precio_unitario = funcion["precio_base"]
+    resultado = registrar_compra_transaccion(usuario_id, funcion_id, butaca_ids, precio_unitario)
+
+    if resultado is None:
+        raise Exception("No se pudo registrar la compra")
+
+    return resultado
+
+def obtener_compra(id_compra, usuario_id):
+    compra = obtener_compra_por_id(id_compra, usuario_id)
+
+    if compra is None:
+        raise ValueError("No existe la compra buscada")
+
+    compra["fecha_compra"] = str(compra["fecha_compra"]) if compra["fecha_compra"] else None
+    compra["fecha_hora_inicio"] = str(compra["fecha_hora_inicio"]) if compra["fecha_hora_inicio"] else None
+    compra["fecha_hora_fin"] = str(compra["fecha_hora_fin"]) if compra["fecha_hora_fin"] else None
+
+    return compra
+
+
+def listar_compras_usuario(usuario_id, cantidad_compras=None):
+
+    cantidad_compras = convertir_a_entero_con_default(
+        cantidad_compras, "cantidad_compras", default=30
+    )
+    
+    if cantidad_compras < 1 or cantidad_compras > 100:
+        raise ValueError("'cantidad_compras' debe estar entre 1 y 100")
+    
+    filas, total = obtener_compras_usuario(usuario_id, cantidad_compras)
+
+    data = []
+    for c in filas:
+        fecha_f = c.fecha_hora_inicio.strftime("%Y-%m-%d") if c.fecha_hora_inicio else None
+        hora_f  = c.fecha_hora_inicio.strftime("%H:%M")    if c.fecha_hora_inicio else None
+        fecha_c = c.fecha_compra.strftime("%Y-%m-%d %H:%M") if c.fecha_compra else None
+
+        data.append({
+            "id": c.id,
+            "codigo": c.codigo,
+            "total": float(c.total),
+            "estado": c.estado,
+            "fecha_compra": fecha_c,
+            "funcion": {
+                "fecha": fecha_f,
+                "hora_inicio": hora_f,
+                "pelicula": c.pelicula_titulo,
+                "poster": c.poster_url,
+                "sala": c.sala_nombre,
+                "local": c.local_nombre,
+            },
+            "cantidad_entradas": c.cantidad_entradas,
+            "cantidad_servicios": c.cantidad_servicios,
+        })
+
+    resumen = {
+        "total": total,
+        "cantidad_compras": cantidad_compras,
+    }
+
+    return data, resumen
+
+
+def cancelar_compra(id_compra, id_usuario, id_motivo):
+
+    resultado = cancelar_compra_en_bd(id_compra, id_usuario, id_motivo)
+
+    if resultado == "no_existe":
+        raise LookupError("Compra no encontrada")
+
+    if resultado == "no_cancelable":
+        raise RuntimeError("La compra no se puede cancelar")
+
+    if resultado == "fuera_de_plazo":
+        raise RuntimeError("Solo se puede cancelar hasta 2 horas antes de la función")
+
+    return {"mensaje": "Compra cancelada correctamente"}
+
+def agregar_servicio_a_compra(compra_id, servicio_id, cantidad, usuario_id):
+
+    servicio_id, cantidad = validar_servicio_en_compra(servicio_id, cantidad)
+
+    compra = buscar_compra(compra_id)
+
+    if compra is None:
+        raise LookupError("No existe la compra")
+
+    if compra["usuario_id"] != usuario_id:
+        raise PermissionError("La compra no pertenece al usuario")
+
+    if compra["estado"] != "pendiente":
+        raise RuntimeError("Solo se pueden agregar servicios a una compra pendiente")
+
+    resultado = agregar_servicio_compra(compra_id, servicio_id, cantidad)
+
+    if resultado == "no_existe":
+        raise LookupError("No existe el servicio")
+
+    return {
+        "compra_id": compra_id,
+        "servicio_id": servicio_id,
+        "cantidad": cantidad,
+        "precio_unitario": resultado["precio_unitario"],
+        "subtotal": resultado["subtotal"],
+    }
+
+def validar_compra_del_usuario(id, usuario_id, estado, mensaje_estado):
+    compra = buscar_compra(id)
+
+    if compra is None:
+        raise LookupError("No existe la compra")
+
+    if compra["usuario_id"] != usuario_id:
+        raise PermissionError("La compra no pertenece al usuario")
+
+    if compra["estado"] != estado:
+        raise RuntimeError(mensaje_estado)
+
+def enviar_mail_de_compra(id):
+    try:
+        filas = obtener_datos_mail(id)
+        servicios = obtener_servicios_mail(id)
+
+        enviar_mail_compra(filas, servicios)
+
+        marcar_email_enviado(id)
+        return True
+
+    except Exception as e:
+        print(f"No se pudo enviar el mail de la compra {id}: {e}")
+        return False
+
+def pagar_compra_id(id, usuario_id):
+
+    validar_compra_del_usuario(id, usuario_id, "pendiente", "La compra no está pendiente de pago")
+
+    numero_factura = "FAC-" + str(id).zfill(6)
+
+    pagar_compra(id, numero_factura)
+
+    email_enviado = enviar_mail_de_compra(id)
+
+    return {"compra_id": id, "estado": "pagada", "numero_factura": numero_factura, "email_enviado": email_enviado}
+
+def reenviar_mail_compra(id, usuario_id):
+
+    validar_compra_del_usuario(id, usuario_id, "pagada", "Solo se puede reenviar el mail de una compra pagada")
+
+    if not enviar_mail_de_compra(id):
+        raise Exception("No se pudo enviar el mail. Intentá de nuevo más tarde.")
+
+    return {"compra_id": id, "email_enviado": True}
+
+

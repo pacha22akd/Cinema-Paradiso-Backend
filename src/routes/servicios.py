@@ -1,0 +1,125 @@
+from flask import Blueprint, request, jsonify
+from src.services import servicios
+from src.utils.errores import devolver_error
+from src.utils.auth import requiere_rol
+
+servicios_bp = Blueprint("servicios", __name__)
+
+@servicios_bp.route('/admin/servicios', methods = ['GET'])
+@requiere_rol("administrador")
+def obtener_servicios():
+
+    try:
+        lista = servicios.listar_servicios()
+        if not lista:
+            return devolver_error("No hay servicios actualmente", 404)
+
+        return jsonify(lista), 200
+    
+    except Exception as e:
+        return devolver_error(str(e), 500)
+
+
+@servicios_bp.route('/admin/servicios', methods = ['POST'])
+@requiere_rol("administrador")
+def nuevo_servicio():
+
+    datos = request.get_json()
+
+    try:
+        servicios.dar_de_alta_servicio(
+            datos.get("nombre"),
+            datos.get("descripcion"),
+            datos.get("categoria"),
+            datos.get("precio"),
+            datos.get("stock"),
+            datos.get("imagen_url"),
+        )
+        return jsonify({"message": "Se creó el servicio correspondiente"}), 201
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+
+    except Exception as e:
+        return devolver_error(str(e), 500)
+
+@servicios_bp.route('/admin/servicios/<int:id>', methods = ['PATCH'])
+@requiere_rol("administrador")
+def patch_servicio(id):
+
+    datos = request.get_json()
+
+    try:
+        existe = servicios.alterar_servicio(
+        id,
+        datos.get("nombre"),
+        datos.get("descripcion"),
+        datos.get("categoria"),
+        datos.get("precio"),
+        datos.get("stock"),
+        datos.get("imagen_url"),
+        )
+    
+        if existe == False:
+            return devolver_error("No existe el servicio buscado", 404)
+
+        return jsonify({"message": "Servicio modificado con éxito."}), 200
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+    except Exception as e:
+        return devolver_error(str(e), 500)
+
+
+@servicios_bp.route("/admin/servicios/<int:id>", methods=["DELETE"])
+@requiere_rol("administrador")
+def delete_servicio(id):
+
+    try:
+        existe = servicios.quitar_servicio(id)
+
+        if existe == False:
+            return devolver_error("No existe el servicio buscado.", 404)
+
+        return jsonify({"message": "Servicio eliminado con éxito."}), 200
+    except Exception as e:
+        return devolver_error(str(e), 500)
+
+
+@servicios_bp.route("/servicios", methods=["GET"])
+def get_servicios_adicionales():
+
+    categoria = request.args.get("categoria")
+
+    try:
+        lista = servicios.listar_servicios_adicionales(categoria)
+        return jsonify(lista), 200
+
+    except Exception as e:
+        return devolver_error(str(e), 500)
+
+
+
+@servicios_bp.route("/admin/servicios/validar_qr", methods=["POST"])
+@requiere_rol("administrador")
+def post_validar_qr_servicios():
+    try:
+        datos = request.get_json(silent=True)
+
+        if not isinstance(datos, dict):
+            return devolver_error("No se recibieron los datos del QR de servicios", 400)
+
+        codigo = datos.get("qr_codigo")
+
+        if not isinstance(codigo, str) or not codigo.strip():
+            return devolver_error("El código QR es obligatorio", 400)
+
+        resultado = servicios.validar_qr_servicios(codigo)
+
+        return jsonify(resultado), 200
+
+    except ValueError as e:
+        return devolver_error(str(e), 400)
+
+    except Exception:
+        return devolver_error("No se pudo validar el QR de servicios", 500)

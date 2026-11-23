@@ -1,0 +1,106 @@
+import os
+import requests
+from dotenv import load_dotenv
+from src.repositories.peliculas import (obtener_pelicula_por_id, obtener_peliculas_cartelera, obtener_peliculas, actualizar_pelicula, insertar_pelicula, eliminar_pelicula)
+
+load_dotenv()
+
+def buscar_pelicula_por_id(pelicula_id):
+    return obtener_pelicula_por_id(pelicula_id)
+
+def listar_peliculas_cartelera(genero=None, titulo=None):
+    return obtener_peliculas_cartelera(genero, titulo)
+
+def listar_peliculas(titulo=None, genero=None) -> list:
+
+    peliculas = obtener_peliculas(titulo, genero)
+
+    return peliculas
+
+def buscar_pelicula_externa(titulo, anio=None):
+
+    api_key = os.getenv("OMDB_API_KEY")
+
+    if not api_key:
+        raise RuntimeError("No se configuro la API Key de OMDb")
+
+    url = "https://www.omdbapi.com/"
+
+    parametros = {
+        "apikey": api_key,
+        "t": titulo,
+        "type": "movie",
+        "plot": "full"
+    }
+
+    if anio is not None:
+        parametros["y"] = anio
+
+    respuesta = requests.get(url, params=parametros, timeout=10)
+
+    respuesta.raise_for_status()
+
+    datos = respuesta.json()
+
+    if datos.get("Response") == "False":
+
+        error = datos.get("Error", "")
+
+        if "not found" in error.lower():
+            return None
+
+        raise RuntimeError("Error al consultar OMDb")
+
+    if datos.get("Response") != "True":
+        raise RuntimeError("Respuesta inesperada de OMDb")
+
+    duracion = datos.get("Runtime")
+    anio_estreno = datos.get("Year")
+
+    pelicula = {
+        "api_id": datos.get("imdbID"),
+        "titulo": datos.get("Title"),
+        "sinopsis": datos.get("Plot"),
+        "poster_url": datos.get("Poster"),
+        "duracion_min": None,
+        "clasificacion": datos.get("Rated"),
+        "genero": datos.get("Genre"),
+        "anio_estreno": None
+    }
+
+    if duracion and duracion != "N/A":
+        minutos = duracion.split()[0]
+
+        if minutos.isdigit():
+            pelicula["duracion_min"] = int(minutos)
+
+    if anio_estreno and anio_estreno.isdigit():
+        pelicula["anio_estreno"] = int(anio_estreno)
+
+    for campo, valor in pelicula.items():
+        if valor == "N/A":
+            pelicula[campo] = None
+
+    return pelicula
+
+def modificar_pelicula_id(id_pelicula, datos):
+
+    pelicula = actualizar_pelicula(id_pelicula, datos)
+
+    return pelicula
+
+def crear_pelicula(datos):
+
+    id_pelicula = insertar_pelicula(datos)
+
+    pelicula = datos.copy()
+    pelicula["id"] = id_pelicula
+
+    return pelicula
+
+
+def borrar_pelicula(id_pelicula):
+
+    resultado = eliminar_pelicula(id_pelicula)
+
+    return resultado
