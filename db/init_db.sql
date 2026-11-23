@@ -10,9 +10,6 @@ DROP TABLE IF EXISTS locales;
 DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS roles;
 
--- ---------------------------------------------
--- 1. SEGURIDAD Y USUARIOS
--- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS roles (
     id     INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE
@@ -29,9 +26,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
--- ---------------------------------------------
--- 2. LOCALES, SALAS Y BUTACAS
--- ---------------------------------------------
+
 CREATE TABLE IF NOT EXISTS locales (
     id        INT AUTO_INCREMENT PRIMARY KEY,
     nombre    VARCHAR(100) NOT NULL,
@@ -59,9 +54,6 @@ CREATE TABLE IF NOT EXISTS butacas (
     UNIQUE (sala_id, fila, numero)
 );
 
--- ---------------------------------------------
--- 3. PELÍCULAS
--- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS peliculas (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     api_id        VARCHAR(50),
@@ -74,9 +66,6 @@ CREATE TABLE IF NOT EXISTS peliculas (
     anio_estreno  INT
 );
 
--- ---------------------------------------------
--- 4. FUNCIONES
--- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS funciones (
     id             INT AUTO_INCREMENT PRIMARY KEY,
     pelicula_id    INT NOT NULL,
@@ -92,9 +81,6 @@ CREATE TABLE IF NOT EXISTS funciones (
     CONSTRAINT chk_funcion_horario CHECK (fecha_hora_fin > fecha_hora_inicio)
 );
 
--- ---------------------------------------------
--- 5. COMPRAS (factura y cancelación integradas)
--- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS compras (
     id                  INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id          INT NOT NULL,
@@ -116,9 +102,6 @@ CREATE TABLE IF NOT EXISTS compras (
     UNIQUE (id, funcion_id)
 );
 
--- ---------------------------------------------
--- 6. ENTRADAS
--- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS entradas (
     id                INT AUTO_INCREMENT PRIMARY KEY,
     compra_id         INT NOT NULL,
@@ -127,23 +110,17 @@ CREATE TABLE IF NOT EXISTS entradas (
     precio            FLOAT NOT NULL,
     qr_codigo         VARCHAR(100) NOT NULL UNIQUE,
     estado            ENUM('pendiente','valida','usada','cancelada') NOT NULL DEFAULT 'pendiente',
-    -- MySQL permite multiples NULL en UNIQUE. Una entrada cancelada deja de bloquear su butaca.
     butaca_ocupada_id INT GENERATED ALWAYS AS (
         CASE WHEN estado = 'cancelada' THEN NULL ELSE butaca_id END
     ) STORED,
     fecha_uso         DATETIME,
     fecha_cancelacion DATETIME,
-    -- Esta FK compuesta exige que la funcion de la entrada sea la misma que la compra.
     FOREIGN KEY (compra_id, funcion_id) REFERENCES compras(id, funcion_id),
     FOREIGN KEY (funcion_id) REFERENCES funciones(id),
     FOREIGN KEY (butaca_id)  REFERENCES butacas(id),
     UNIQUE (funcion_id, butaca_ocupada_id)
 );
 
--- ---------------------------------------------
--- 7. SERVICIOS
--- Se mantiene el borrado fisico; si hay compra_servicios asociados, la FK impide eliminar.
--- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS servicios (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     nombre      VARCHAR(100) NOT NULL,
@@ -165,22 +142,10 @@ CREATE TABLE IF NOT EXISTS compra_servicios (
     FOREIGN KEY (servicio_id) REFERENCES servicios(id)
 );
 
-
--- ---------------------------------------------
--- 8. DATOS DE PRUEBA (INSERT INTO)
--- ---------------------------------------------
--- Para pruebas locales exclusivamente; NO son cuentas reales ni datos de producción.
--- Contraseña de los cuatro usuarios de prueba: Demo1234!
--- Los hashes son PBKDF2 SHA-256 compatibles con werkzeug.security.check_password_hash().
--- Si el Backend usa otro mecanismo de contraseñas, adaptar estos hashes.
--- Los importes usan FLOAT, de acuerdo con la modificación solicitada.
-
--- ROLES: 2 registros
 INSERT INTO roles (nombre) VALUES
     ('administrador'),
     ('cliente');
 
--- USUARIOS: 4 registros
 INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol_id, fecha_registro) VALUES
     ('Milagros', 'Córdoba', 'pcinema129@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-1000', 1, '2026-11-11 10:00:00'),
     ('Brunella', 'Valdata', 'brunellavaldata@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-2000', 1, '2026-11-11 10:00:00'),
@@ -189,20 +154,17 @@ INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, rol_id, 
     ('Sebastian', 'Romero', 'sebarom12@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-5000', 1, '2026-11-11 10:00:00'),
     ('Maximo', 'Febles', 'maximofebles@gmail.com', 'scrypt:32768:8:1$RfIkuGs8Ad7i5B3V$495c52755ee3aac8f6cee0ec283efc6f6271b21af7f11ba1bc7790506399e93b8a54a7275f7a4cd76362d890da769cf34f89470d766ee4c3026dc06e58e5872a', '1111-6000', 1, '2026-11-11 10:00:00');
 
--- LOCALES: 3 registros, como indica el contexto del enunciado
 INSERT INTO locales (nombre, direccion, ciudad, telefono) VALUES
     ('Cine Paradiso Centro', 'Av. Corrientes 1200', 'CABA', '011-4000-1000'),
     ('Cine Paradiso Norte', 'Av. Cabildo 2200', 'CABA', '011-4000-2000'),
     ('Cine Paradiso Oeste', 'Av. Rivadavia 6400', 'CABA', '011-4000-3000');
 
--- SALAS: 4 registros (12 butacas cada una); una sala para el tercer local
 INSERT INTO salas (local_id, nombre, capacidad, tipo) VALUES
     (1, 'Sala 1', 50, '2D'),
     (1, 'Sala 2', 50, '3D'),
     (2, 'Sala 1', 50, '2D'),
     (3, 'Sala 1', 50, '2D');
 
--- BUTACAS: 48 registros, 12 en cada sala
 INSERT INTO butacas (sala_id, fila, numero, tipo) VALUES
     (1, 'A', 1, 'estandar'),
     (1, 'A', 2, 'estandar'),
@@ -405,8 +367,6 @@ INSERT INTO butacas (sala_id, fila, numero, tipo) VALUES
     (4, 'E', 9, 'estandar'),
     (4, 'E', 10, 'estandar');
 
--- PELICULAS: 6 registros, con URLs de poster publicas de TMDb para el frontend
--- Son enlaces de un servicio externo y pueden cambiar con el tiempo.
 INSERT INTO peliculas
     (api_id, titulo, sinopsis, poster_url, duracion_min, clasificacion, genero, anio_estreno)
 VALUES
@@ -417,7 +377,6 @@ VALUES
     ('tt2380307', 'Coco', 'Un chico viaja al mundo de los muertos y descubre su historia familiar.', 'https://image.tmdb.org/t/p/w500/gGEsBPAijhVUFoiNpgZXqRVWJt2.jpg', 105, 'PG', 'Animacion', 2017),
     ('tt10872600', 'Spider-Man: No Way Home', 'Peter Parker enfrenta las consecuencias de una identidad revelada.', 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg', 148, 'PG-13', 'Accion', 2021);
 
--- FUNCIONES: 10 registros (futuras, finalizadas y una cancelada)
 INSERT INTO funciones
     (pelicula_id, sala_id, fecha_hora_inicio, fecha_hora_fin, precio_base, estado)
 VALUES
@@ -443,7 +402,6 @@ VALUES
     (5, 4, '2026-12-05 19:00:00', '2026-12-05 20:45:00', 7000.00, 'programada'),
     (6, 4, '2026-12-06 19:00:00', '2026-12-06 21:28:00', 9000.00, 'programada');
 
--- SERVICIOS: 6 registros
 INSERT INTO servicios (nombre, descripcion, categoria, precio, stock, imagen_url) VALUES
     ('Pochoclos medianos', 'Pochoclos para una persona', 'Comida', 2500.00, 50, NULL),
     ('Gaseosa 500 ml', 'Gaseosa individual', 'Bebida', 1800.00, 70, NULL),
@@ -452,9 +410,6 @@ INSERT INTO servicios (nombre, descripcion, categoria, precio, stock, imagen_url
     ('Agua mineral', 'Botella de agua 500 ml', 'Bebida', 1500.00, 60, NULL),
     ('Golosinas surtidas', 'Pack de golosinas', 'Comida', 1300.00, 40, NULL);
 
--- COMPRAS: 10 registros (pendientes, pagadas, cancelada y usadas)
--- CMP-010 vuelve a reservar una butaca que CMP-005 habia cancelado.
--- Cada total coincide con sus entradas y sus servicios adicionales.
 INSERT INTO compras
     (usuario_id, funcion_id, codigo, total, estado, fecha_compra,
      email_enviado, fecha_cancelacion, motivo_cancelacion,
@@ -471,10 +426,6 @@ VALUES
     (4, 1, 'CMP-009',  8500.00, 'pendiente', '2026-10-30 09:30:00', FALSE, NULL, NULL, NULL, NULL, FALSE),
     (4, 5, 'CMP-010',  7000.00, 'pagada', '2026-10-30 11:00:00', TRUE, NULL, NULL, 'FAC-010', NULL, TRUE);
 
--- ENTRADAS: 11 registros. La butaca 25 de funcion 5 aparece cancelada en CMP-005
--- y vuelta a comprar en CMP-010; UNIQUE solo bloquea entradas NO canceladas.
--- Toda entrada tiene QR desde que se crea; las de compras pendientes quedan en estado 'pendiente'.
--- La validacion del QR debe verificar tambien que la compra este pagada o usada.
 INSERT INTO entradas
     (compra_id, funcion_id, butaca_id, precio, qr_codigo, estado, fecha_uso, fecha_cancelacion)
 VALUES
@@ -490,7 +441,6 @@ VALUES
     (9, 1,  11, 8500.00, 'QR-DEMO-CMP009-B1', 'pendiente', NULL, NULL),
     (10, 5, 101, 7000.00, 'QR-DEMO-CMP010-A1', 'valida', NULL, NULL);
 
--- SERVICIOS COMPRADOS: 6 registros
 INSERT INTO compra_servicios
     (compra_id, servicio_id, cantidad, precio_unitario, subtotal)
 VALUES
@@ -500,24 +450,3 @@ VALUES
     (6, 4, 1, 2900.00, 2900.00),
     (7, 5, 1, 1500.00, 1500.00),
     (8, 3, 1, 4000.00, 4000.00);
-
-
--- ---------------------------------------------
--- 9. REGLAS QUE DEBE IMPLEMENTAR EL BACKEND
--- ---------------------------------------------
--- La base ya impide reservas activas duplicadas por (funcion_id, butaca_id).
--- Para cancelar: actualizar compras.estado y entradas.estado a 'cancelada'
--- DENTRO DE LA MISMA TRANSACCION. Asi se libera la butaca y se conserva el historial.
--- Para pagar: verificar compra pendiente y generar qr_codigo (UNIQUE),
--- pasando sus entradas de 'pendiente' a 'valida' en una transaccion.
--- Para reservas pendientes abandonadas: definir una politica de expiracion
--- que cancele compra+entradas en una transaccion para liberar las butacas.
--- El backend debe verificar que butacas.sala_id = funciones.sala_id,
--- que la sala no tenga funciones superpuestas y que los intervalos sean validos.
--- Al programar/editar funciones, comprobar solapamientos bajo bloqueo/transaccion:
---   existente.fecha_hora_inicio < nueva_fin
---   AND existente.fecha_hora_fin > nueva_inicio
--- Los locales, usuarios, posters y entradas de este archivo son datos DEMO.
--- Al borrar un servicio con compras asociadas, la FK lo rechaza (manejar HTTP 409).
--- El SQL NO envia emails, no genera PDFs y no crea codigos QR reales:
--- esas tareas corresponden al backend y a los endpoints del TP.
