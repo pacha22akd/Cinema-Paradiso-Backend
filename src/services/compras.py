@@ -1,7 +1,7 @@
 from datetime import datetime
 from src.repositories.compras import (cancelar_compra_en_bd, agregar_servicio_compra, registrar_compra_transaccion, obtener_compra_por_id, obtener_compras_usuario, buscar_compra, obtener_datos_mail, marcar_email_enviado, pagar_compra, )
 from src.repositories.funciones import obtener_funcion_por_id, obtener_butacas_por_funcion
-from src.validators.compras import validar_datos_compra, validar_servicio_en_compra
+from src.validators.compras import validar_datos_compra, validar_servicio_en_compra, convertir_a_entero_con_default
 from src.utils.mail import enviar_mail_compra
 from src.repositories.servicios import obtener_servicios_mail
 
@@ -55,56 +55,17 @@ def obtener_compra(id_compra, usuario_id):
 
     return compra
 
-ESTADOS_VALIDOS = {"pendiente", "pagada", "cancelada", "usada"}
 
-def _parse_int(valor, campo, default=None):
-    if valor is None or valor == "":
-        return default
-    try:
-        return int(valor)
-    except (TypeError, ValueError):
-        raise ValueError(f"El parámetro '{campo}' debe ser un número entero")
+def listar_compras_usuario(usuario_id, cantidad_compras=None):
 
-
-def _parse_datetime(valor, campo):
-    if not valor:
-        return None
-    try:
-        return datetime.fromisoformat(valor)
-    except ValueError:
-        raise ValueError(
-            f"El parámetro '{campo}' debe tener formato ISO 8601 "
-            f"(YYYY-MM-DD o YYYY-MM-DDTHH:MM:SS)"
-        )
-
-def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
-                           fecha_hasta=None, page=None, per_page=None):
+    cantidad_compras = convertir_a_entero_con_default(
+        cantidad_compras, "cantidad_compras", default=30
+    )
     
+    if cantidad_compras < 1 or cantidad_compras > 100:
+        raise ValueError("'cantidad_compras' debe estar entre 1 y 100")
     
-
-    page        = _parse_int(page, "page", default=1)
-    per_page    = _parse_int(per_page, "per_page", default=10)
-    fecha_desde = _parse_datetime(fecha_desde, "fecha_desde")
-    fecha_hasta = _parse_datetime(fecha_hasta, "fecha_hasta")
-
-    if page < 1:
-        raise ValueError("'page' debe ser mayor a 0")
-    if per_page < 1 or per_page > 100:
-        raise ValueError("'per_page' debe estar entre 1 y 100")
-    if estado and estado not in ESTADOS_VALIDOS:
-        raise ValueError(
-            f"'estado' inválido. Permitidos: {', '.join(sorted(ESTADOS_VALIDOS))}"
-        )
-    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
-        raise ValueError("'fecha_desde' no puede ser mayor que 'fecha_hasta'")
-
-    filtros = {
-        "estado":      estado,
-        "fecha_desde": fecha_desde,
-        "fecha_hasta": fecha_hasta,
-    }
-    offset = (page - 1) * per_page
-    filas, total = obtener_compras_usuario(usuario_id, filtros, offset, per_page)
+    filas, total = obtener_compras_usuario(usuario_id, cantidad_compras)
 
     data = []
     for c in filas:
@@ -130,14 +91,12 @@ def listar_compras_usuario(usuario_id, estado=None, fecha_desde=None,
             "cantidad_servicios": c.cantidad_servicios,
         })
 
-    meta = {
+    resumen = {
         "total": total,
-        "page": page,
-        "per_page": per_page,
-        "total_pages": (total + per_page - 1) // per_page if per_page else 0,
+        "cantidad_compras": cantidad_compras,
     }
 
-    return data, meta
+    return data, resumen
 
 
 def cancelar_compra(id_compra, id_usuario, id_motivo):

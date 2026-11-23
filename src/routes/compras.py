@@ -58,19 +58,15 @@ def get_compra(id):
 @requiere_auth
 def listar_compras():
     try:
-        data, meta = compras.listar_compras_usuario(
-            usuario_id  = g.usuario_id,  
-            estado      = request.args.get("estado"),
-            fecha_desde = request.args.get("fecha_desde"),
-            fecha_hasta = request.args.get("fecha_hasta"),
-            page        = request.args.get("page"),
-            per_page    = request.args.get("per_page"),
+        data, resumen = compras.listar_compras_usuario(
+            usuario_id  = g.usuario_id,
+            cantidad_compras = request.args.get("cantidad_compras"),
         )
 
         return jsonify({
             "mensaje": "Historial de compras obtenido exitosamente",
             "data": data,
-            "meta": meta
+            "resumen": resumen
         }), 200
 
     except ValueError as e:

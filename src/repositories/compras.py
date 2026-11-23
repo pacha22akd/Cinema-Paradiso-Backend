@@ -130,28 +130,14 @@ def obtener_compra_por_id(id_compra, usuario_id):
     conn.close()
     return compra
 
-def obtener_compras_usuario(usuario_id, filtros, offset, limit):
+def obtener_compras_usuario(usuario_id, cantidad_compras):
     
-    condiciones = ["c.usuario_id = :usuario_id"]
-    params = {"usuario_id": usuario_id}
+    params = {"usuario_id": usuario_id, "cantidad_compras": cantidad_compras}
 
-    if filtros.get("estado"):
-        condiciones.append("c.estado = :estado")
-        params["estado"] = filtros["estado"]
-
-    if filtros.get("fecha_desde"):
-        condiciones.append("c.fecha_compra >= :fecha_desde")
-        params["fecha_desde"] = filtros["fecha_desde"]
-
-    if filtros.get("fecha_hasta"):
-        condiciones.append("c.fecha_compra <= :fecha_hasta")
-        params["fecha_hasta"] = filtros["fecha_hasta"]
-
-    where = "WHERE " + " AND ".join(condiciones)
-
-    sql_count = text(f"SELECT COUNT(*) AS total FROM compras c {where}")
     
-    sql = text(f"""
+    sql_count = text("SELECT COUNT(*) AS total FROM compras c WHERE c.usuario_id = :usuario_id")
+    
+    sql = text("""
         SELECT c.id, c.codigo, c.total, c.estado, c.fecha_compra,
                f.fecha_hora_inicio,
                p.titulo AS pelicula_titulo, p.poster_url,
@@ -165,17 +151,14 @@ def obtener_compras_usuario(usuario_id, filtros, offset, limit):
         JOIN peliculas p ON f.pelicula_id = p.id
         JOIN salas     s ON f.sala_id    = s.id
         JOIN locales   l ON s.local_id   = l.id
-        {where}
+        WHERE c.usuario_id = :usuario_id
         ORDER BY c.fecha_compra DESC
-        LIMIT :limit OFFSET :offset
+        LIMIT :cantidad_compras
     """)
     
-    params["limit"] = limit
-    params["offset"] = offset
-
     
     with db.connect() as conn:
-        total = conn.execute(sql_count, params).scalar()
+        total = conn.execute(sql_count, {"usuario_id": usuario_id}).scalar()
         filas = conn.execute(sql, params).fetchall()
 
     return filas, total

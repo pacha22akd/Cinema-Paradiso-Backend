@@ -31,6 +31,12 @@ def convertir_a_entero(valor, mensaje_error):
     except (TypeError, ValueError, OverflowError):
         raise ValueError(mensaje_error)
 
+def convertir_a_entero_con_default(valor, campo, default):
+    if valor is None or valor == "":
+        return default
+    return convertir_a_entero(
+        valor, f"El parámetro '{campo}' debe ser un número entero"
+    )
 
 def validar_servicio_en_compra(servicio_id, cantidad):
 
@@ -44,3 +50,4 @@ def validar_servicio_en_compra(servicio_id, cantidad):
         raise ValueError("La cantidad debe ser mayor a 0")
 
     return servicio_id, cantidad
+
