@@ -25,8 +25,17 @@ def listar_funciones():
     return obtener_funciones()
 
 
+
 def buscar_funcion_por_id(id_funcion):
-    return obtener_funcion_por_id(id_funcion)
+    funcion = obtener_funcion_por_id(id_funcion)
+
+    if funcion is None:
+        return None
+
+    funcion["fecha_hora_inicio"] = funcion["fecha_hora_inicio"].isoformat()
+    funcion["fecha_hora_fin"] = funcion["fecha_hora_fin"].isoformat()
+
+    return funcion
 
 
 def crear_nueva_funcion(datos_funcion):
