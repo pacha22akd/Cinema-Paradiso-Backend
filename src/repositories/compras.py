@@ -174,20 +174,13 @@ def cancelar_compra_en_bd(id_compra, id_usuario, motivo):
             SELECT
                 c.usuario_id,
                 c.estado,
-                (
-                    SELECT f.fecha_hora_inicio
-                    FROM funciones f
-                    WHERE f.id = c.funcion_id
-                ) AS fecha_hora_inicio,
+                f.fecha_hora_inicio,
                 NOW() > DATE_SUB(
-                    (
-                        SELECT f.fecha_hora_inicio
-                        FROM funciones f
-                        WHERE f.id = c.funcion_id
-                    ),
+                    f.fecha_hora_inicio,
                     INTERVAL :horas HOUR
                 ) AS fuera_de_plazo
             FROM compras c
+            JOIN funciones f ON c.funcion_id = f.id
             WHERE c.id = :id_compra
             FOR UPDATE
         """
@@ -245,7 +238,7 @@ def cancelar_compra_en_bd(id_compra, id_usuario, motivo):
 
     finally:
         conn.close()
-
+        
 def buscar_compra(id):
 
     query = "SELECT id, estado, usuario_id FROM compras WHERE id = :id"
