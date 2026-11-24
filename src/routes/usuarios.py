@@ -53,9 +53,7 @@ def post_usuario():
         return jsonify({'mensaje': 'Usuario registrado exitosamente','usuario': resultado}), 201
 
     except ValueError as e:
-        mensaje = str(e)
-        status = 409 if "email ya está registrado" in mensaje else 400
-        return devolver_error(mensaje, status)
+        return devolver_error(str(e),400)
 
     except Exception as e:
         return devolver_error(f"Error inesperado: {str(e)}", 500)
