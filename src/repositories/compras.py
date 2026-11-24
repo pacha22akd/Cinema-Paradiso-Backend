@@ -141,11 +141,7 @@ def obtener_compras_usuario(usuario_id, cantidad_compras):
         SELECT c.id, c.codigo, c.total, c.estado, c.fecha_compra,
                f.fecha_hora_inicio,
                p.titulo AS pelicula_titulo, p.poster_url,
-               s.nombre AS sala_nombre, l.nombre AS local_nombre,
-               (SELECT COUNT(*) FROM entradas e
-                 WHERE e.compra_id = c.id) AS cantidad_entradas,
-               (SELECT COUNT(*) FROM compra_servicios cs
-                 WHERE cs.compra_id = c.id) AS cantidad_servicios
+               s.nombre AS sala_nombre, l.nombre AS local_nombre
         FROM compras c
         JOIN funciones f ON c.funcion_id = f.id
         JOIN peliculas p ON f.pelicula_id = p.id

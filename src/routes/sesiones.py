@@ -8,8 +8,6 @@ sesiones_bp = Blueprint('sesiones', __name__)
 def iniciar_sesion():
     datos = request.get_json(silent=True)
 
-    if not datos:
-        return devolver_error("Debe proporcionar un cuerpo JSON válido", 400)
 
     try:
         respuesta = sesiones.iniciar_sesion(

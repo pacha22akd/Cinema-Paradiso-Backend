@@ -85,10 +85,8 @@ def listar_compras_usuario(usuario_id, cantidad_compras=None):
                 "pelicula": c.pelicula_titulo,
                 "poster": c.poster_url,
                 "sala": c.sala_nombre,
-                "local": c.local_nombre,
-            },
-            "cantidad_entradas": c.cantidad_entradas,
-            "cantidad_servicios": c.cantidad_servicios,
+                "local": c.local_nombre,}
+            
         })
 
     resumen = {
