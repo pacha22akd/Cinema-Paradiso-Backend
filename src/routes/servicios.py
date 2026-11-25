@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from src.services import servicios
 from src.utils.errores import devolver_error
 from src.utils.auth import requiere_rol
-
+from src.validators.servicios import validar_datos_qr_servicios
 servicios_bp = Blueprint("servicios", __name__)
 
 @servicios_bp.route('/admin/servicios', methods = ['GET'])
@@ -106,13 +106,7 @@ def post_validar_qr_servicios():
     try:
         datos = request.get_json(silent=True)
 
-        if not isinstance(datos, dict):
-            return devolver_error("No se recibieron los datos del QR de servicios", 400)
-
-        codigo = datos.get("qr_codigo")
-
-        if not isinstance(codigo, str) or not codigo.strip():
-            return devolver_error("El código QR es obligatorio", 400)
+        codigo = validar_datos_qr_servicios(datos)
 
         resultado = servicios.validar_qr_servicios(codigo)
 
