@@ -32,3 +32,16 @@ def validar_modificacion_servicio(id, nombre, precio, stock):
 
     validar_precio(precio)
     validar_stock(stock)
+
+
+
+def validar_datos_qr_servicios(datos):
+    if not isinstance(datos, dict):
+        raise ValueError("No se recibieron los datos del QR de servicios")
+
+    codigo = datos.get("qr_codigo")
+
+    if not isinstance(codigo, str) or not codigo.strip():
+        raise ValueError("El código QR es obligatorio")
+
+    return codigo
